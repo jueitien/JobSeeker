@@ -1,25 +1,40 @@
 using JobSeeker.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Diagnostics;
 
 namespace JobSeeker.Controllers
 {
+    [Authorize]
     public class HomeController : Controller
     {
+        [AllowAnonymous]
         public IActionResult Index()
         {
             return View();
         }
 
-        public IActionResult Privacy()
+        [Authorize(Roles = UserRoles.JobSeeker)]
+        public IActionResult JobSeeker()
         {
             return View();
         }
 
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
+        [Authorize(Roles = UserRoles.Employer)]
+        public IActionResult Employer()
         {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            return View();
+        }
+
+        [Authorize(Roles = UserRoles.CareerCounsellor)]
+        public IActionResult CareerCounsellor()
+        {
+            return View();
+        }
+
+        [Authorize(Roles = UserRoles.Administrator)]
+        public IActionResult Administrator()
+        {
+            return View();
         }
     }
 }
