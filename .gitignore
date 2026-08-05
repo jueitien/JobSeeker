@@ -1,0 +1,29 @@
+# Visual Studio cache/options
+.vs/
+
+# Build results
+bin/
+obj/
+*.dll
+*.exe
+*.pdb
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Local History for Visual Studio
+.localhistory/
+
+# Visual Studio cache directory
+.vs/
+
+# Rider
+.idea/
+*.sln.iml
+
+# Project specific
+appsettings.Development.json
