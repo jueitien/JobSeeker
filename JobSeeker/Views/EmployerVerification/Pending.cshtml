@@ -1,0 +1,49 @@
+@{
+    ViewData["Title"] = "Pending Employer Verifications";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Employer Verification</h2>
+    <div class="d-flex gap-2">
+        <a asp-action="Pending" class="btn btn-warning btn-sm">Pending</a>
+        <a asp-action="Approved" class="btn btn-outline-success btn-sm">Approved</a>
+        <a asp-action="Rejected" class="btn btn-outline-danger btn-sm">Rejected</a>
+    </div>
+</div>
+
+<!-- Employer Cards -->
+<div class="row g-3">
+    <!-- Placeholder Card -->
+    <div class="col-md-6 col-xl-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="bg-secondary rounded d-flex align-items-center justify-content-center text-white fw-bold"
+                         style="width:52px;height:52px;font-size:18px;">
+                        AC
+                    </div>
+                    <div>
+                        <div class="fw-semibold">Acme Corporation</div>
+                        <div class="text-muted small">hr@acmecorp.com</div>
+                    </div>
+                </div>
+                <ul class="list-unstyled small text-muted mb-3">
+                    <li><strong>Industry:</strong> Technology</li>
+                    <li><strong>Company Size:</strong> 51–200</li>
+                    <li><strong>Reg. No:</strong> 123456-A</li>
+                    <li><strong>Registered:</strong> 03 Jan 2026</li>
+                </ul>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-sm btn-outline-secondary flex-fill">View Details</button>
+                    <button class="btn btn-sm btn-success flex-fill">Approve</button>
+                    <button class="btn btn-sm btn-danger flex-fill">Reject</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Empty state (shown when no results) -->
+    <div class="col-12">
+        <p class="text-muted text-center py-4">No pending verifications at this time.</p>
+    </div>
+</div>

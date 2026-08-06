@@ -118,9 +118,109 @@
                             {
                                 <li class="nav-item">
                                     <a class="nav-link text-dark"
-                                       asp-controller="UserManagement"
+                                       asp-controller="Admin"
+                                       asp-action="Dashboard">
+                                        Dashboard
+                                    </a>
+                                </li>
+
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link text-dark dropdown-toggle"
+                                       href="#"
+                                       role="button"
+                                       data-bs-toggle="dropdown"
+                                       aria-expanded="false">
+                                        User Management
+                                    </a>
+                                    <ul class="dropdown-menu">
+                                        <li>
+                                            <a class="dropdown-item"
+                                               asp-controller="UserManagement"
+                                               asp-action="Index">
+                                                All Users
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item"
+                                               asp-controller="UserManagement"
+                                               asp-action="Suspended">
+                                                Suspended Accounts
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link text-dark dropdown-toggle"
+                                       href="#"
+                                       role="button"
+                                       data-bs-toggle="dropdown"
+                                       aria-expanded="false">
+                                        Employer Verification
+                                    </a>
+                                    <ul class="dropdown-menu">
+                                        <li>
+                                            <a class="dropdown-item"
+                                               asp-controller="EmployerVerification"
+                                               asp-action="Pending">
+                                                Pending Verification
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item"
+                                               asp-controller="EmployerVerification"
+                                               asp-action="Approved">
+                                                Approved Employers
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item"
+                                               asp-controller="EmployerVerification"
+                                               asp-action="Rejected">
+                                                Rejected Employers
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link text-dark dropdown-toggle"
+                                       href="#"
+                                       role="button"
+                                       data-bs-toggle="dropdown"
+                                       aria-expanded="false">
+                                        Job Postings
+                                    </a>
+                                    <ul class="dropdown-menu">
+                                        <li>
+                                            <a class="dropdown-item"
+                                               asp-controller="JobApproval"
+                                               asp-action="Pending">
+                                                Pending Approval
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item"
+                                               asp-controller="JobApproval"
+                                               asp-action="Approved">
+                                                Approved Jobs
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item"
+                                               asp-controller="JobApproval"
+                                               asp-action="Rejected">
+                                                Rejected Jobs
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark"
+                                       asp-controller="Reports"
                                        asp-action="Index">
-                                        Manage Users
+                                        Reports
                                     </a>
                                 </li>
                             }
