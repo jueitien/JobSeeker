@@ -27,3 +27,4 @@ obj/
 
 # Project specific
 appsettings.Development.json
+example/

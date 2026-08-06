@@ -2,7 +2,19 @@
     ViewData["Title"] = "Job Seeker Home";
 }
 
-<h1>Job Seeker Home</h1>
-<p>Welcome, @User.Identity?.Name.</p>
+<div class="p-4 p-md-5 mb-4 bg-light rounded-3">
+    <div class="container-fluid py-2">
+        <h1 class="display-5 fw-bold mb-3">Job Seeker Home</h1>
+        <p class="col-md-8 fs-5">
+            Welcome, @User.Identity?.Name. Use your profile area to manage the details stored in the Identity database.
+        </p>
+
+        <a asp-controller="Profile"
+           asp-action="Index"
+           class="btn btn-primary btn-lg">
+            Open Profile
+        </a>
+    </div>
+</div>
 
 <p>Find suitable jobs, manage your profile and track your applications.</p>

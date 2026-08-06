@@ -1,0 +1,144 @@
+@model JobSeeker.Models.ViewModels.JobSeekerProfileDetailsViewModel
+
+@{
+    ViewData["Title"] = "My Profile";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="mb-1">My Profile</h1>
+        <p class="text-muted mb-0">View your saved job seeker information.</p>
+    </div>
+
+    <a asp-action="Edit" class="btn btn-primary">
+        Create / Update Profile
+    </a>
+</div>
+
+@if (TempData["SuccessMessage"] is string successMessage)
+{
+    <div class="alert alert-success">@successMessage</div>
+}
+
+@if (Model.Profile == null)
+{
+    <div class="alert alert-info">
+        You have not created a profile yet. Use the button above to add your information.
+    </div>
+}
+else
+{
+    <div class="card mb-4">
+        <div class="card-header">Profile Summary</div>
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Objective</dt>
+                <dd class="col-sm-9">@Model.Profile.CareerObjective</dd>
+
+                <dt class="col-sm-3">Description</dt>
+                <dd class="col-sm-9">@Model.Profile.ProfileDescription</dd>
+
+                <dt class="col-sm-3">Qualification</dt>
+                <dd class="col-sm-9">@Model.Profile.HighestQualification</dd>
+
+                <dt class="col-sm-3">Field of Study</dt>
+                <dd class="col-sm-9">@Model.Profile.FieldOfStudy</dd>
+
+                <dt class="col-sm-3">University</dt>
+                <dd class="col-sm-9">@Model.Profile.UniversityName</dd>
+
+                <dt class="col-sm-3">Graduation Year</dt>
+                <dd class="col-sm-9">@Model.Profile.GraduationYear</dd>
+
+                <dt class="col-sm-3">Experience</dt>
+                <dd class="col-sm-9">@Model.Profile.ExperienceDescription</dd>
+
+                <dt class="col-sm-3">Preferred Job</dt>
+                <dd class="col-sm-9">@Model.Profile.PreferredJobTitle</dd>
+
+                <dt class="col-sm-3">Preferred Location</dt>
+                <dd class="col-sm-9">@Model.Profile.PreferredLocation</dd>
+
+                <dt class="col-sm-3">Expected Salary</dt>
+                <dd class="col-sm-9">@Model.Profile.ExpectedSalary?.ToString("N2")</dd>
+
+                <dt class="col-sm-3">Availability Date</dt>
+                <dd class="col-sm-9">@Model.Profile.AvailabilityDate</dd>
+            </dl>
+        </div>
+    </div>
+}
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header">Resumes</div>
+            <div class="card-body">
+                @if (!Model.Resumes.Any())
+                {
+                    <p class="text-muted mb-0">No resumes uploaded yet.</p>
+                }
+                else
+                {
+                    <ul class="list-group list-group-flush">
+                        @foreach (var resume in Model.Resumes)
+                        {
+                            <li class="list-group-item">
+                                <div class="fw-semibold">@resume.ResumeTitle</div>
+                                <div class="small text-muted">@resume.ResumeS3Key</div>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header">Certifications</div>
+            <div class="card-body">
+                @if (!Model.Certifications.Any())
+                {
+                    <p class="text-muted mb-0">No certifications uploaded yet.</p>
+                }
+                else
+                {
+                    <ul class="list-group list-group-flush">
+                        @foreach (var certification in Model.Certifications)
+                        {
+                            <li class="list-group-item">
+                                <div class="fw-semibold">@certification.CertificationName</div>
+                                <div class="small text-muted">@certification.CertificateS3Key</div>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header">Skills</div>
+            <div class="card-body">
+                @if (!Model.Skills.Any())
+                {
+                    <p class="text-muted mb-0">No skills linked yet.</p>
+                }
+                else
+                {
+                    <ul class="list-group list-group-flush">
+                        @foreach (var skill in Model.Skills)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>@skill.Skill.SkillName</span>
+                                <span class="badge text-bg-secondary">@skill.ProficiencyLevel</span>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+    </div>
+</div>

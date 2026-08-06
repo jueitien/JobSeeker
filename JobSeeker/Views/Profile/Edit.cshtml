@@ -1,0 +1,106 @@
+@model JobSeeker.Models.JobSeekerProfile
+
+@{
+    ViewData["Title"] = "Edit Profile";
+    var isNewProfile = Model.CreatedAt == default;
+}
+
+<div class="mb-4">
+    <h1 class="mb-1">@(isNewProfile ? "Create Profile" : "Update Profile")</h1>
+    <p class="text-muted mb-0">Save your job seeker details in the Identity database.</p>
+</div>
+
+<form asp-action="Edit" method="post" class="row g-4">
+    <input asp-for="JobSeekerId" type="hidden" />
+
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">Profile Information</div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label asp-for="ProfileDescription" class="form-label"></label>
+                        <textarea asp-for="ProfileDescription" class="form-control" rows="4"></textarea>
+                        <span asp-validation-for="ProfileDescription" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-12">
+                        <label asp-for="CareerObjective" class="form-label"></label>
+                        <textarea asp-for="CareerObjective" class="form-control" rows="3"></textarea>
+                        <span asp-validation-for="CareerObjective" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="HighestQualification" class="form-label"></label>
+                        <input asp-for="HighestQualification" class="form-control" />
+                        <span asp-validation-for="HighestQualification" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="FieldOfStudy" class="form-label"></label>
+                        <input asp-for="FieldOfStudy" class="form-control" />
+                        <span asp-validation-for="FieldOfStudy" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="UniversityName" class="form-label"></label>
+                        <input asp-for="UniversityName" class="form-control" />
+                        <span asp-validation-for="UniversityName" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="GraduationYear" class="form-label"></label>
+                        <input asp-for="GraduationYear" class="form-control" type="number" min="1900" max="2100" />
+                        <span asp-validation-for="GraduationYear" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-12">
+                        <label asp-for="ExperienceDescription" class="form-label"></label>
+                        <textarea asp-for="ExperienceDescription" class="form-control" rows="4"></textarea>
+                        <span asp-validation-for="ExperienceDescription" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="PreferredJobTitle" class="form-label"></label>
+                        <input asp-for="PreferredJobTitle" class="form-control" />
+                        <span asp-validation-for="PreferredJobTitle" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="PreferredLocation" class="form-label"></label>
+                        <input asp-for="PreferredLocation" class="form-control" />
+                        <span asp-validation-for="PreferredLocation" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="ExpectedSalary" class="form-label"></label>
+                        <input asp-for="ExpectedSalary" class="form-control" type="number" min="0" step="0.01" />
+                        <span asp-validation-for="ExpectedSalary" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="AvailabilityDate" class="form-label"></label>
+                        <input asp-for="AvailabilityDate" class="form-control" type="date" />
+                        <span asp-validation-for="AvailabilityDate" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 d-flex gap-2">
+        <button type="submit" class="btn btn-primary">
+            Save Profile
+        </button>
+
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            Cancel
+        </a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
