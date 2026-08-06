@@ -161,7 +161,27 @@ namespace JobSeeker.Controllers
                 return LocalRedirect(model.ReturnUrl);
             }
 
-            return RedirectToAction("Index", "Home");
+            if (await _userManager.IsInRoleAsync(user, UserRoles.JobSeeker))
+                return RedirectToAction("JobSeeker", "Home");
+
+            if (await _userManager.IsInRoleAsync(user, UserRoles.Employer))
+                return RedirectToAction("Employer", "Home");
+
+            if (await _userManager.IsInRoleAsync(
+                    user, UserRoles.CareerCounsellor))
+                return RedirectToAction("CareerCounsellor", "Home");
+
+            if (await _userManager.IsInRoleAsync(
+                    user, UserRoles.Administrator))
+                return RedirectToAction("Administrator", "Home");
+
+            await _signInManager.SignOutAsync();
+
+            ModelState.AddModelError(
+                string.Empty,
+                "No valid role is assigned to this account.");
+
+            return View(model);
         }
 
         [Authorize]

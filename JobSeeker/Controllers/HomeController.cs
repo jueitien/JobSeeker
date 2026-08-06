@@ -10,6 +10,24 @@ namespace JobSeeker.Controllers
         [AllowAnonymous]
         public IActionResult Index()
         {
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                if (User.IsInRole(UserRoles.JobSeeker))
+                    return RedirectToAction(nameof(JobSeeker));
+
+                if (User.IsInRole(UserRoles.Employer))
+                    return RedirectToAction(nameof(Employer));
+
+                if (User.IsInRole(UserRoles.CareerCounsellor))
+                    return RedirectToAction(nameof(CareerCounsellor));
+
+                if (User.IsInRole(UserRoles.Administrator))
+                    return RedirectToAction(nameof(Administrator));
+
+                return Forbid();
+            }
+
+            // Public welcome page for users who are not logged in
             return View();
         }
 
