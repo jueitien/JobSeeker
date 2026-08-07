@@ -1,8 +1,199 @@
 ﻿@{
     ViewData["Title"] = "Career Counsellor Home";
+
+    // Temporary values until the database is created
+    int resumeReviewCount = 3;
+    int careerRecommendationCount = 5;
+    int skillRecommendationCount = 8;
+    int certificationRecommendationCount = 4;
+
+    var recentResumeReviews = new[]
+    {
+        new
+        {
+            JobSeekerName = "Ali Ahmad",
+            ResumeTitle = "Software Developer Resume",
+            FeedbackStatus = "COMPLETED",
+            UpdatedAt = DateTime.Now.AddHours(-2)
+        },
+        new
+        {
+            JobSeekerName = "Siti Aminah",
+            ResumeTitle = "Business Analyst Resume",
+            FeedbackStatus = "IN_PROGRESS",
+            UpdatedAt = DateTime.Now.AddDays(-1)
+        },
+        new
+        {
+            JobSeekerName = "John Tan",
+            ResumeTitle = "UI/UX Designer Resume",
+            FeedbackStatus = "PENDING",
+            UpdatedAt = DateTime.Now.AddDays(-2)
+        }
+    };
 }
 
-<h1>Career Counsellor Home</h1>
-<p>Welcome, @User.Identity?.Name.</p>
+<div class="container py-4">
+    <div class="mb-4">
+        <h1 class="h3">Career Counsellor Dashboard</h1>
+        <p class="text-muted mb-0">
+            Review recent counselling activities and recommendations.
+        </p>
+    </div>
 
-<p>Review job seekers and provide career and skills recommendations.</p>
+    <!-- Summary cards -->
+    <div class="row g-3 mb-5">
+        <div class="col-sm-6 col-xl-3">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <p class="text-muted mb-2">Resume Reviews</p>
+                    <h2 class="display-6 fw-semibold">
+                        @resumeReviewCount
+                    </h2>
+
+                    <a asp-controller="CareerCounsellor"
+                       asp-action="ResumeReview"
+                       class="btn btn-sm btn-outline-primary">
+                        View Reviews
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <p class="text-muted mb-2">
+                        Career Recommendations
+                    </p>
+                    <h2 class="display-6 fw-semibold">
+                        @careerRecommendationCount
+                    </h2>
+
+                    <a asp-controller="CareerCounsellor"
+                       asp-action="CareerRecommendations"
+                       class="btn btn-sm btn-outline-primary">
+                        View Recommendations
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <p class="text-muted mb-2">
+                        Skill Recommendations
+                    </p>
+                    <h2 class="display-6 fw-semibold">
+                        @skillRecommendationCount
+                    </h2>
+
+                    <a asp-controller="CareerCounsellor"
+                       asp-action="SkillRecommendations"
+                       class="btn btn-sm btn-outline-primary">
+                        View Recommendations
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <p class="text-muted mb-2">
+                        Certification Recommendations
+                    </p>
+                    <h2 class="display-6 fw-semibold">
+                        @certificationRecommendationCount
+                    </h2>
+
+                    <a asp-controller="CareerCounsellor"
+                       asp-action="CertificationRecommendations"
+                       class="btn btn-sm btn-outline-primary">
+                        View Recommendations
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent resume reviews -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-0 pt-4 px-4">
+            <div class="d-flex flex-wrap justify-content-between
+                align-items-center gap-2">
+                <div>
+                    <h2 class="h5 mb-1">Recent Resume Review Status</h2>
+                    <p class="text-muted small mb-0">
+                        Latest resume review activities from all statuses.
+                    </p>
+                </div>
+
+                <a asp-controller="CareerCounsellor"
+                   asp-action="ResumeReview"
+                   class="btn btn-sm btn-primary">
+                    View All
+                </a>
+            </div>
+        </div>
+
+        <div class="card-body px-4 pb-4">
+            @if (ViewBag.RecentResumeReviews != null)
+            {
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Job Seeker</th>
+                                <th>Resume</th>
+                                <th>Status</th>
+                                <th>Last Updated</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @foreach (
+                                var review in ViewBag.RecentResumeReviews)
+                            {
+                                string badgeClass =
+                                    review.FeedbackStatus == "COMPLETED"
+                                        ? "bg-success"
+                                        : review.FeedbackStatus == "IN_PROGRESS"
+                                            ? "bg-warning text-dark"
+                                            : "bg-secondary";
+
+                                string statusText =
+                                    review.FeedbackStatus == "IN_PROGRESS"
+                                        ? "In Progress"
+                                        : review.FeedbackStatus == "COMPLETED"
+                                            ? "Completed"
+                                            : "Pending";
+
+                                <tr>
+                                    <td>@review.JobSeekerName</td>
+                                    <td>@review.ResumeTitle</td>
+                                    <td>
+                                        <span class="badge @badgeClass">
+                                            @statusText
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @review.UpdatedAt.ToString(
+                                            "dd MMM yyyy, h:mm tt")
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center text-muted py-5">
+                    No resume review records are available.
+                </div>
+            }
+        </div>
+    </div>
+</div>

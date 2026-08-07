@@ -102,10 +102,45 @@
                             {
                                 <li class="nav-item">
                                     <a class="nav-link text-dark"
-                                       asp-controller="CareerAdvice"
-                                       asp-action="Index">
-                                        Career Advice
+                                       asp-controller="CareerCounsellor"
+                                       asp-action="ResumeReview">
+                                        Resume Review
                                     </a>
+                                </li>
+
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle text-dark"
+                                       href="#"
+                                       id="recommendationsDropdown"
+                                       role="button"
+                                       data-bs-toggle="dropdown"
+                                       aria-expanded="false">
+                                        Recommendations
+                                    </a>
+
+                                    <ul class="dropdown-menu" aria-labelledby="recommendationsDropdown">
+                                        <li>
+                                            <a class="dropdown-item"
+                                               asp-controller="CareerCounsellor"
+                                               asp-action="CareerReview">
+                                                Career
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item"
+                                               asp-controller="CareerCounsellor"
+                                               asp-action="SkillReview">
+                                                Skill
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item"
+                                               asp-controller="CareerCounsellor"
+                                               asp-action="CertificationReview">
+                                                Certification
+                                            </a>
+                                        </li>
+                                    </ul>
                                 </li>
                             }
 
@@ -223,7 +258,31 @@
                     </ul>
 
                     <ul class="navbar-nav ms-auto">
+<<<<<<< HEAD
                         <partial name="_LoginPartial" />
+=======
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <li class="nav-item">
+                                <span class="nav-link text-muted">
+                                    @User.Identity.Name
+                                </span>
+                            </li>
+
+                            <li class="nav-item">
+                                <form asp-controller="Account"
+                                      asp-action="Logout"
+                                      method="post">
+                                    <button type="submit"
+                                            class="nav-link btn btn-link text-dark border-0">
+                                        Logout
+                                    </button>
+                                </form>
+                            </li>
+
+
+                        }
+>>>>>>> fdeed17 (counsellor function done)
                     </ul>
                 </div>
             </div>

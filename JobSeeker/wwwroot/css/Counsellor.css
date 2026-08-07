@@ -1,0 +1,26 @@
+﻿.badge {
+    min-width: 75px;
+    min-height: 30px;
+    font-weight: 600;
+    border-radius: 6px;
+}
+
+.badge-new {
+    background-color: #42A5F5;
+    color: #222;
+}
+
+.badge-progress {
+    background-color: #FDD835;
+    color: #222;
+}
+
+.badge-completed {
+    background-color: #81C784;
+    color: #222;
+}
+
+.badge-dismissed {
+    background-color: #E57373;
+    color: #222;
+}
