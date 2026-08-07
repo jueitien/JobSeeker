@@ -60,30 +60,30 @@
                 </div>
 
                 <div class="col-sm-6 col-md-2">
-                    <label class="form-label small text-muted mb-1">Job Type</label>
-                    <select name="filterJobType" class="form-select">
-                        <option value="All" selected="@(string.IsNullOrEmpty(Model.FilterJobType) || Model.FilterJobType == "All")">All Types</option>
-                        <option value="Full-Time"  selected="@(Model.FilterJobType == "Full-Time")">Full-Time</option>
-                        <option value="Part-Time"  selected="@(Model.FilterJobType == "Part-Time")">Part-Time</option>
-                        <option value="Contract"   selected="@(Model.FilterJobType == "Contract")">Contract</option>
-                        <option value="Internship" selected="@(Model.FilterJobType == "Internship")">Internship</option>
+                    <label class="form-label small text-muted mb-1">Employment Type</label>
+                    <select name="filterEmploymentType" class="form-select">
+                        <option value="All" selected="@(string.IsNullOrEmpty(Model.FilterEmploymentType) || Model.FilterEmploymentType == "All")">All Types</option>
+                        <option value="FULL_TIME"  selected="@(Model.FilterEmploymentType == "FULL_TIME")">Full-Time</option>
+                        <option value="PART_TIME"  selected="@(Model.FilterEmploymentType == "PART_TIME")">Part-Time</option>
+                        <option value="CONTRACT"   selected="@(Model.FilterEmploymentType == "CONTRACT")">Contract</option>
+                        <option value="INTERNSHIP" selected="@(Model.FilterEmploymentType == "INTERNSHIP")">Internship</option>
                     </select>
                 </div>
 
                 <div class="col-sm-6 col-md-2">
-                    <label class="form-label small text-muted mb-1">Experience</label>
-                    <select name="filterExperienceLevel" class="form-select">
-                        <option value="All" selected="@(string.IsNullOrEmpty(Model.FilterExperienceLevel) || Model.FilterExperienceLevel == "All")">All Levels</option>
-                        <option value="Entry"  selected="@(Model.FilterExperienceLevel == "Entry")">Entry</option>
-                        <option value="Mid"    selected="@(Model.FilterExperienceLevel == "Mid")">Mid</option>
-                        <option value="Senior" selected="@(Model.FilterExperienceLevel == "Senior")">Senior</option>
+                    <label class="form-label small text-muted mb-1">Workplace</label>
+                    <select name="filterWorkplaceType" class="form-select">
+                        <option value="All" selected="@(string.IsNullOrEmpty(Model.FilterWorkplaceType) || Model.FilterWorkplaceType == "All")">All</option>
+                        <option value="ON_SITE" selected="@(Model.FilterWorkplaceType == "ON_SITE")">On-Site</option>
+                        <option value="HYBRID"  selected="@(Model.FilterWorkplaceType == "HYBRID")">Hybrid</option>
+                        <option value="REMOTE"  selected="@(Model.FilterWorkplaceType == "REMOTE")">Remote</option>
                     </select>
                 </div>
 
                 <div class="col-md-2">
                     <label class="form-label small text-muted mb-1">Location</label>
                     <input type="text" name="filterLocation" class="form-control"
-                           placeholder="e.g. Kuala Lumpur"
+                           placeholder="e.g. Kota Kinabalu"
                            value="@Model.FilterLocation" />
                 </div>
 
@@ -106,14 +106,6 @@
             <text> for "<em>@Model.SearchKeyword</em>"</text>
         }
     </span>
-    <div class="d-flex align-items-center gap-2">
-        <span class="text-muted small">Sort by:</span>
-        <select class="form-select form-select-sm w-auto" id="sortSelect">
-            <option value="newest">Newest First</option>
-            <option value="deadline">Deadline</option>
-            <option value="title">Title A–Z</option>
-        </select>
-    </div>
 </div>
 
 @* ── Vacancy Cards ── *@
@@ -125,9 +117,8 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                   d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
-        <h5 class="text-muted">No vacancies found</h5>
-        <p class="text-muted small">Try adjusting your filters or post a new vacancy.</p>
-        <a asp-controller="Vacancies" asp-action="Index" class="btn btn-outline-primary btn-sm">Clear filters</a>
+        <h5 class="text-muted">No vacancies posted yet</h5>
+        <p class="text-muted small">Click "Post a Vacancy" to create your first job listing.</p>
     </div>
 }
 else
@@ -135,58 +126,68 @@ else
     <div class="row g-3" id="vacancyGrid">
         @foreach (var job in Model.PublishedVacancies)
         {
-            <div class="col-lg-6 col-xl-4 vacancy-item"
-                 data-posted="@job.PostedOn.ToString("yyyy-MM-dd")"
-                 data-deadline="@(job.Deadline?.ToString("yyyy-MM-dd") ?? "9999-12-31")"
-                 data-title="@job.Title">
+            <div class="col-lg-6 col-xl-4 vacancy-item">
                 <div class="card border-0 shadow-sm h-100 vac-card">
                     <div class="card-body d-flex flex-column">
 
                         <div class="d-flex justify-content-between align-items-start mb-2">
-                            <div class="vac-company-logo">@job.Company.Substring(0, 1).ToUpper()</div>
-                            <span class="badge vac-badge-jobtype vac-jobtype-@job.JobType.ToLower().Replace("-","")">
-                                @job.JobType
-                            </span>
+                            <div class="vac-company-logo">@job.CompanyName.Substring(0, 1).ToUpper()</div>
+                            <div class="d-flex flex-column align-items-end gap-1">
+                                <span class="badge vac-badge-jobtype vac-jobtype-@job.EmploymentType.ToLower().Replace("_","")">
+                                    @Friendly(job.EmploymentType)
+                                </span>
+                                @{
+                                    var statusBadgeClass = job.ApprovalStatus switch
+                                    {
+                                        "APPROVED" => "bg-success",
+                                        "REJECTED" => "bg-danger",
+                                        _ => "bg-warning text-dark"
+                                    };
+                                }
+                                <span class="badge @statusBadgeClass">@Friendly(job.ApprovalStatus)</span>
+                            </div>
                         </div>
 
-                        <h5 class="card-title mb-1 fw-semibold">@job.Title</h5>
+                        <h5 class="card-title mb-1 fw-semibold">@job.JobTitle</h5>
                         <p class="text-muted small mb-2">
                             <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none"
                                  viewBox="0 0 24 24" stroke="currentColor" class="me-1" style="vertical-align:-1px">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                       d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0l-7-7-7 7" />
                             </svg>
-                            @job.Company
+                            @job.CompanyName
                         </p>
 
                         <div class="d-flex flex-wrap gap-1 mb-3">
-                            <span class="vac-chip">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none"
-                                     viewBox="0 0 24 24" stroke="currentColor" class="me-1">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                          d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                </svg>
-                                @job.Location
-                            </span>
-                            <span class="vac-chip">@job.ExperienceLevel</span>
-                            @if (!string.IsNullOrWhiteSpace(job.SalaryRange))
+                            @if (!string.IsNullOrWhiteSpace(job.Location))
                             {
-                                <span class="vac-chip vac-chip-salary">@job.SalaryRange</span>
+                                <span class="vac-chip">@job.Location</span>
                             }
+                            @if (!string.IsNullOrWhiteSpace(job.WorkplaceType))
+                            {
+                                <span class="vac-chip">@Friendly(job.WorkplaceType)</span>
+                            }
+                            @if (job.MinimumSalary.HasValue || job.MaximumSalary.HasValue)
+                            {
+                                <span class="vac-chip vac-chip-salary">
+                                    RM @job.MinimumSalary?.ToString("N0") - RM @job.MaximumSalary?.ToString("N0")
+                                </span>
+                            }
+                            <span class="vac-chip @(job.JobStatus == "OPEN" ? "" : "text-danger")">
+                                @(job.JobStatus == "OPEN" ? "Open" : "Closed") · @job.VacancyCount vacanc@(job.VacancyCount == 1 ? "y" : "ies")
+                            </span>
                         </div>
 
-                        <p class="small text-muted vac-desc-clamp mb-3">@job.Description</p>
+                        <p class="small text-muted vac-desc-clamp mb-3">@job.JobDescription</p>
 
                         <div class="mt-auto">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <span class="text-muted" style="font-size:.75rem">
-                                    Posted @job.PostedOn.ToString("dd MMM yyyy")
+                                    Posted @job.CreatedAt.ToString("dd MMM yyyy")
                                 </span>
-                                @if (job.Deadline.HasValue)
+                                @if (job.ApplicationDeadline.HasValue)
                                 {
-                                    var daysLeft = (job.Deadline.Value - DateTime.Today).Days;
+                                    var daysLeft = job.ApplicationDeadline.Value.DayNumber - DateOnly.FromDateTime(DateTime.Today).DayNumber;
                                     var cls = daysLeft <= 7 ? "text-danger" : "text-muted";
                                     <span class="@cls" style="font-size:.75rem">
                                         @if (daysLeft < 0) { <text>Closed</text> }
@@ -196,22 +197,41 @@ else
                                 }
                             </div>
 
-                            <button type="button" class="btn btn-primary btn-sm w-100"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#vacancyDetailModal"
-                                    data-title="@job.Title"
-                                    data-company="@job.Company"
-                                    data-location="@job.Location"
-                                    data-jobtype="@job.JobType"
-                                    data-experience="@job.ExperienceLevel"
-                                    data-salary="@(job.SalaryRange ?? "Not specified")"
-                                    data-description="@job.Description"
-                                    data-requirements="@job.Requirements"
-                                    data-deadline="@(job.Deadline?.ToString("dd MMM yyyy") ?? "Open")"
-                                    data-postedby="@job.PostedBy"
-                                    data-postedon="@job.PostedOn.ToString("dd MMM yyyy")">
-                                View Details
-                            </button>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-primary btn-sm flex-grow-1"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#vacancyDetailModal"
+                                        data-title="@job.JobTitle"
+                                        data-company="@job.CompanyName"
+                                        data-location="@(job.Location ?? "Not specified")"
+                                        data-employmenttype="@Friendly(job.EmploymentType)"
+                                        data-workplacetype="@Friendly(job.WorkplaceType ?? "")"
+                                        data-salary="@(job.MinimumSalary.HasValue || job.MaximumSalary.HasValue ? $"RM {job.MinimumSalary?.ToString("N0")} - RM {job.MaximumSalary?.ToString("N0")}" : "Not specified")"
+                                        data-description="@job.JobDescription"
+                                        data-requirements="@job.Responsibilities"
+                                        data-deadline="@(job.ApplicationDeadline?.ToString("dd MMM yyyy") ?? "Open")"
+                                        data-status="@Friendly(job.ApprovalStatus)"
+                                        data-postedon="@job.CreatedAt.ToString("dd MMM yyyy")">
+                                    View Details
+                                </button>
+
+                                @if (job.JobStatus == "OPEN")
+                                {
+                                    <form asp-controller="Vacancies" asp-action="Close" method="post" onsubmit="return confirm('Close this vacancy? Job seekers will no longer be able to apply.');">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@job.JobId" />
+                                        <button type="submit" class="btn btn-outline-secondary btn-sm">Close</button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <form asp-controller="Vacancies" asp-action="Reopen" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@job.JobId" />
+                                        <button type="submit" class="btn btn-outline-success btn-sm">Reopen</button>
+                                    </form>
+                                }
+                            </div>
                         </div>
 
                     </div>
@@ -236,82 +256,114 @@ else
                 @Html.AntiForgeryToken()
                 <div class="modal-body">
 
+                    <div class="alert alert-info small">
+                        Newly posted vacancies require Administrator approval before they appear to job seekers.
+                    </div>
+
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
-                            <label asp-for="NewVacancy.Title" class="form-label"></label>
-                            <input asp-for="NewVacancy.Title" class="form-control" placeholder="e.g. Software Engineer" />
-                            <span asp-validation-for="NewVacancy.Title" class="text-danger small"></span>
+                            <label asp-for="NewVacancy.JobTitle" class="form-label"></label>
+                            <input asp-for="NewVacancy.JobTitle" class="form-control" placeholder="e.g. Software Engineer" />
+                            <span asp-validation-for="NewVacancy.JobTitle" class="text-danger small"></span>
                         </div>
                         <div class="col-md-6">
-                            <label asp-for="NewVacancy.Company" class="form-label"></label>
-                            <input asp-for="NewVacancy.Company" class="form-control" placeholder="e.g. Tech Solutions Inc." />
-                            <span asp-validation-for="NewVacancy.Company" class="text-danger small"></span>
+                            <label asp-for="NewVacancy.CompanyName" class="form-label"></label>
+                            <input asp-for="NewVacancy.CompanyName" class="form-control" placeholder="e.g. Tech Solutions Inc." />
+                            <span asp-validation-for="NewVacancy.CompanyName" class="text-danger small"></span>
                         </div>
                     </div>
 
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
                             <label asp-for="NewVacancy.Location" class="form-label"></label>
-                            <input asp-for="NewVacancy.Location" class="form-control" placeholder="e.g. Kuala Lumpur / Remote" />
+                            <input asp-for="NewVacancy.Location" class="form-control" placeholder="e.g. Kota Kinabalu, Sabah" />
                             <span asp-validation-for="NewVacancy.Location" class="text-danger small"></span>
                         </div>
-                        <div class="col-md-6">
-                            <label asp-for="NewVacancy.JobType" class="form-label"></label>
-                            <select asp-for="NewVacancy.JobType" class="form-select">
-                                <option value="">— Select job type —</option>
-                                <option value="Full-Time">Full-Time</option>
-                                <option value="Part-Time">Part-Time</option>
-                                <option value="Contract">Contract</option>
-                                <option value="Internship">Internship</option>
+                        <div class="col-md-3">
+                            <label asp-for="NewVacancy.EmploymentType" class="form-label"></label>
+                            <select asp-for="NewVacancy.EmploymentType" class="form-select">
+                                <option value="">— Select —</option>
+                                <option value="FULL_TIME">Full-Time</option>
+                                <option value="PART_TIME">Part-Time</option>
+                                <option value="CONTRACT">Contract</option>
+                                <option value="INTERNSHIP">Internship</option>
                             </select>
-                            <span asp-validation-for="NewVacancy.JobType" class="text-danger small"></span>
+                            <span asp-validation-for="NewVacancy.EmploymentType" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-3">
+                            <label asp-for="NewVacancy.WorkplaceType" class="form-label"></label>
+                            <select asp-for="NewVacancy.WorkplaceType" class="form-select">
+                                <option value="">— Select —</option>
+                                <option value="ON_SITE">On-Site</option>
+                                <option value="HYBRID">Hybrid</option>
+                                <option value="REMOTE">Remote</option>
+                            </select>
+                            <span asp-validation-for="NewVacancy.WorkplaceType" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label asp-for="NewVacancy.MinimumQualification" class="form-label"></label>
+                            <input asp-for="NewVacancy.MinimumQualification" class="form-control" placeholder="e.g. Bachelor Degree" />
+                            <span asp-validation-for="NewVacancy.MinimumQualification" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="NewVacancy.PreferredFieldOfStudy" class="form-label"></label>
+                            <input asp-for="NewVacancy.PreferredFieldOfStudy" class="form-control" placeholder="e.g. Software Engineering" />
+                            <span asp-validation-for="NewVacancy.PreferredFieldOfStudy" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="NewVacancy.MinimumExperienceYears" class="form-label"></label>
+                            <input asp-for="NewVacancy.MinimumExperienceYears" class="form-control" type="number" step="0.5" min="0" />
+                            <span asp-validation-for="NewVacancy.MinimumExperienceYears" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label asp-for="NewVacancy.MinimumSalary" class="form-label"></label>
+                            <input asp-for="NewVacancy.MinimumSalary" class="form-control" type="number" step="50" min="0" placeholder="e.g. 3000" />
+                            <span asp-validation-for="NewVacancy.MinimumSalary" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="NewVacancy.MaximumSalary" class="form-label"></label>
+                            <input asp-for="NewVacancy.MaximumSalary" class="form-control" type="number" step="50" min="0" placeholder="e.g. 5000" />
+                            <span asp-validation-for="NewVacancy.MaximumSalary" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="NewVacancy.VacancyCount" class="form-label"></label>
+                            <input asp-for="NewVacancy.VacancyCount" class="form-control" type="number" min="1" />
+                            <span asp-validation-for="NewVacancy.VacancyCount" class="text-danger small"></span>
                         </div>
                     </div>
 
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
-                            <label asp-for="NewVacancy.ExperienceLevel" class="form-label"></label>
-                            <select asp-for="NewVacancy.ExperienceLevel" class="form-select">
-                                <option value="">— Select level —</option>
-                                <option value="Entry">Entry Level</option>
-                                <option value="Mid">Mid Level</option>
-                                <option value="Senior">Senior Level</option>
-                            </select>
-                            <span asp-validation-for="NewVacancy.ExperienceLevel" class="text-danger small"></span>
-                        </div>
-                        <div class="col-md-6">
-                            <label asp-for="NewVacancy.SalaryRange" class="form-label"></label>
-                            <input asp-for="NewVacancy.SalaryRange" class="form-control" placeholder="e.g. RM 5,000 - RM 8,000" />
-                            <span asp-validation-for="NewVacancy.SalaryRange" class="text-danger small"></span>
-                        </div>
-                    </div>
-
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-6">
-                            <label asp-for="NewVacancy.Deadline" class="form-label"></label>
-                            <input asp-for="NewVacancy.Deadline" class="form-control" type="date"
+                            <label asp-for="NewVacancy.ApplicationDeadline" class="form-label"></label>
+                            <input asp-for="NewVacancy.ApplicationDeadline" class="form-control" type="date"
                                    min="@DateTime.Today.ToString("yyyy-MM-dd")" />
-                            <span asp-validation-for="NewVacancy.Deadline" class="text-danger small"></span>
+                            <span asp-validation-for="NewVacancy.ApplicationDeadline" class="text-danger small"></span>
                         </div>
                     </div>
 
                     <div class="mb-3">
-                        <label asp-for="NewVacancy.Description" class="form-label"></label>
-                        <textarea asp-for="NewVacancy.Description" class="form-control" rows="4"
-                                  placeholder="Describe the role and responsibilities…"></textarea>
+                        <label asp-for="NewVacancy.JobDescription" class="form-label"></label>
+                        <textarea asp-for="NewVacancy.JobDescription" class="form-control" rows="4"
+                                  placeholder="Describe the role and what you're looking for…"></textarea>
                         <div class="d-flex justify-content-between">
-                            <span asp-validation-for="NewVacancy.Description" class="text-danger small"></span>
-                            <span class="text-muted small" id="descCount">0 / 5000</span>
+                            <span asp-validation-for="NewVacancy.JobDescription" class="text-danger small"></span>
+                            <span class="text-muted small" id="descCount">0 / 4000</span>
                         </div>
                     </div>
 
                     <div class="mb-3">
-                        <label asp-for="NewVacancy.Requirements" class="form-label"></label>
-                        <textarea asp-for="NewVacancy.Requirements" class="form-control" rows="4"
-                                  placeholder="List required skills and qualifications…"></textarea>
+                        <label asp-for="NewVacancy.Responsibilities" class="form-label"></label>
+                        <textarea asp-for="NewVacancy.Responsibilities" class="form-control" rows="4"
+                                  placeholder="List key responsibilities…"></textarea>
                         <div class="d-flex justify-content-between">
-                            <span asp-validation-for="NewVacancy.Requirements" class="text-danger small"></span>
-                            <span class="text-muted small" id="reqCount">0 / 3000</span>
+                            <span asp-validation-for="NewVacancy.Responsibilities" class="text-danger small"></span>
+                            <span class="text-muted small" id="reqCount">0 / 4000</span>
                         </div>
                     </div>
 
@@ -319,7 +371,7 @@ else
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Post Vacancy</button>
+                    <button type="submit" class="btn btn-primary">Submit for Approval</button>
                 </div>
             </form>
         </div>
@@ -355,14 +407,14 @@ else
                         <div id="detailDeadline" class="fw-medium">—</div>
                     </div>
                     <div class="col-sm-6">
-                        <span class="vac-detail-label">Posted by</span>
+                        <span class="vac-detail-label">Posted on</span>
                         <div id="detailPostedBy" class="fw-medium">—</div>
                     </div>
                 </div>
                 <hr />
                 <h6 class="fw-semibold mb-2">Job Description</h6>
                 <p id="detailDescription" class="text-muted mb-4"></p>
-                <h6 class="fw-semibold mb-2">Requirements</h6>
+                <h6 class="fw-semibold mb-2">Responsibilities</h6>
                 <p id="detailRequirements" class="text-muted mb-0"></p>
             </div>
             <div class="modal-footer">
@@ -375,4 +427,13 @@ else
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
     <script src="~/js/employer.js" asp-append-version="true"></script>
+}
+
+@functions {
+    private static string Friendly(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return "";
+        var words = value.Replace("_", " ").ToLowerInvariant();
+        return System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(words);
+    }
 }

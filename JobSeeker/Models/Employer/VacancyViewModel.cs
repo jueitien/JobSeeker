@@ -2,63 +2,100 @@ using System.ComponentModel.DataAnnotations;
 
 namespace JobSeeker.Models.Employer
 {
-    public class VacancyViewModel
+    /// <summary>
+    /// Form model used when an Employer creates a new job vacancy.
+    /// Field names/values line up with the `jobs` table (see JobSeeker.Models.Job)
+    /// so they can be mapped directly onto a Job entity in the controller.
+    /// </summary>
+    public class VacancyFormViewModel : IValidatableObject
     {
-        public int Id { get; set; }
-
         [Required(ErrorMessage = "Job title is required.")]
-        [StringLength(150)]
+        [StringLength(200)]
         [Display(Name = "Job Title")]
-        public string Title { get; set; } = string.Empty;
+        public string JobTitle { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Company name is required.")]
-        [StringLength(150)]
+        [StringLength(200)]
         [Display(Name = "Company Name")]
-        public string Company { get; set; } = string.Empty;
+        public string CompanyName { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Location is required.")]
+        [StringLength(200)]
+        public string? Location { get; set; }
+
+        [Required(ErrorMessage = "Employment type is required.")]
+        [Display(Name = "Employment Type")]
+        public string EmploymentType { get; set; } = string.Empty;   // FULL_TIME, PART_TIME, CONTRACT, INTERNSHIP
+
+        [Display(Name = "Workplace Type")]
+        public string? WorkplaceType { get; set; }                   // ON_SITE, HYBRID, REMOTE
+
         [StringLength(150)]
-        public string Location { get; set; } = string.Empty;
+        [Display(Name = "Minimum Qualification")]
+        public string? MinimumQualification { get; set; }
 
-        [Required(ErrorMessage = "Job type is required.")]
-        [Display(Name = "Job Type")]
-        public string JobType { get; set; } = string.Empty;
+        [StringLength(150)]
+        [Display(Name = "Preferred Field of Study")]
+        public string? PreferredFieldOfStudy { get; set; }
 
-        [Required(ErrorMessage = "Experience level is required.")]
-        [Display(Name = "Experience Level")]
-        public string ExperienceLevel { get; set; } = string.Empty;
+        [Range(0, 50, ErrorMessage = "Enter a value between 0 and 50.")]
+        [Display(Name = "Minimum Experience (years)")]
+        public decimal MinimumExperienceYears { get; set; }
 
-        [Display(Name = "Salary Range (optional)")]
-        [StringLength(80)]
-        public string? SalaryRange { get; set; }
+        [Range(0, 999999, ErrorMessage = "Enter a valid salary amount.")]
+        [Display(Name = "Minimum Salary (RM)")]
+        public decimal? MinimumSalary { get; set; }
 
-        [Required(ErrorMessage = "Job description is required.")]
-        [Display(Name = "Job Description")]
-        [StringLength(5000)]
-        public string Description { get; set; } = string.Empty;
+        [Range(0, 999999, ErrorMessage = "Enter a valid salary amount.")]
+        [Display(Name = "Maximum Salary (RM)")]
+        public decimal? MaximumSalary { get; set; }
 
-        [Required(ErrorMessage = "Requirements are required.")]
-        [StringLength(3000)]
-        public string Requirements { get; set; } = string.Empty;
+        [Range(1, 100, ErrorMessage = "Enter a value between 1 and 100.")]
+        [Display(Name = "Number of Vacancies")]
+        public int VacancyCount { get; set; } = 1;
 
         [Display(Name = "Application Deadline")]
         [DataType(DataType.Date)]
-        public DateTime? Deadline { get; set; }
+        public DateOnly? ApplicationDeadline { get; set; }
 
-        [Display(Name = "Posted On")]
-        public DateTime PostedOn { get; set; } = DateTime.Now;
+        [Required(ErrorMessage = "Job description is required.")]
+        [StringLength(4000)]
+        [Display(Name = "Job Description")]
+        public string JobDescription { get; set; } = string.Empty;
 
-        public string PostedBy { get; set; } = string.Empty;
+        [StringLength(4000)]
+        [Display(Name = "Responsibilities")]
+        public string? Responsibilities { get; set; }
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (MinimumSalary.HasValue && MaximumSalary.HasValue && MaximumSalary < MinimumSalary)
+            {
+                yield return new ValidationResult(
+                    "Maximum salary must be greater than or equal to minimum salary.",
+                    new[] { nameof(MaximumSalary) });
+            }
+
+            if (ApplicationDeadline.HasValue && ApplicationDeadline.Value < DateOnly.FromDateTime(DateTime.Today))
+            {
+                yield return new ValidationResult(
+                    "Application deadline cannot be in the past.",
+                    new[] { nameof(ApplicationDeadline) });
+            }
+        }
     }
 
+    /// <summary>
+    /// Container for the Employer's Vacancies page: the new-vacancy form
+    /// plus the employer's own posted jobs (loaded from the `jobs` table).
+    /// </summary>
     public class VacanciesPageViewModel
     {
-        public VacancyViewModel NewVacancy { get; set; } = new();
-        public List<VacancyViewModel> PublishedVacancies { get; set; } = new();
+        public VacancyFormViewModel NewVacancy { get; set; } = new();
+        public List<Job> PublishedVacancies { get; set; } = new();
 
         public string? SearchKeyword { get; set; }
-        public string? FilterJobType { get; set; }
-        public string? FilterExperienceLevel { get; set; }
+        public string? FilterEmploymentType { get; set; }
+        public string? FilterWorkplaceType { get; set; }
         public string? FilterLocation { get; set; }
     }
 }
