@@ -27,3 +27,9 @@ obj/
 
 # Project specific
 appsettings.Development.json
+example/
+
+# Local development uploads (replace with S3 later)
+JobSeeker/wwwroot/uploads/
+
+JOB_SEEKER_TESTING.md

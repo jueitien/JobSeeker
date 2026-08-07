@@ -1,4 +1,4 @@
-﻿using JobSeeker.Models;
+using JobSeeker.Models;
 using Microsoft.AspNetCore.Identity;
 
 namespace JobSeeker.Data

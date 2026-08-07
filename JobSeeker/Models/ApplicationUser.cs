@@ -8,5 +8,7 @@ namespace JobSeeker.Models
         [Required]
         [StringLength(100)]
         public string FullName { get; set; } = string.Empty;
+
+        public JobSeekerProfile? JobSeekerProfile { get; set; }
     }
 }

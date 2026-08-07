@@ -41,6 +41,7 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddRazorPages();
 
 var app = builder.Build();
 
@@ -60,6 +61,8 @@ app.UseAuthorization();
 
 app.MapStaticAssets();
 
+app.MapRazorPages();
+
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")
@@ -67,8 +70,24 @@ app.MapControllerRoute(
 
 using (var scope = app.Services.CreateScope())
 {
-    await IdentitySeeder.SeedRolesAsync(
-        scope.ServiceProvider);
+    try
+    {
+        // Apply any pending EF Core migrations before the application starts
+        // serving requests. This ensures newly added tables such as jobs and
+        // job_applications exist in the configured SQL Server database.
+        var dbContext = scope.ServiceProvider
+            .GetRequiredService<ApplicationDbContext>();
+
+        await dbContext.Database.MigrateAsync();
+
+        await IdentitySeeder.SeedRolesAsync(
+            scope.ServiceProvider);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Database initialization failed: {ex.Message}");
+        throw;
+    }
 }
 
 app.Run();

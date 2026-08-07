@@ -1,0 +1,210 @@
+@model JobSeeker.Models.JobSeekerProfile
+@using JobSeeker.Models
+@{
+    ViewData["Title"] = "Edit Profile";
+    var resumes = ViewBag.Resumes as List<Resume> ?? new List<Resume>();
+    var certifications = ViewBag.Certifications as List<Certification> ?? new List<Certification>();
+    var skills = ViewBag.Skills as List<JobSeekerSkill> ?? new List<JobSeekerSkill>();
+}
+
+<div class="profile-edit-page">
+    <div class="page-title-row mb-4">
+        <div>
+            <a asp-action="Index" class="back-link">← Back to profile</a>
+            <h1>Edit your profile</h1>
+            <p>Manage your profile information, skills, resume and certifications in one place.</p>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] is string successMessage)
+    {
+        <div class="alert alert-success portal-alert">@successMessage</div>
+    }
+    @if (TempData["ErrorMessage"] is string errorMessage)
+    {
+        <div class="alert alert-danger portal-alert">@errorMessage</div>
+    }
+
+    <form asp-action="Edit" asp-controller="Profile" method="post">
+        @Html.AntiForgeryToken()
+        <input asp-for="JobSeekerId" type="hidden" />
+        <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+        <section class="portal-card mb-4">
+            <div class="portal-card-header compact">
+                <div><span class="section-eyebrow">Introduction</span><h2 class="section-title">About you</h2></div>
+            </div>
+            <div class="mb-4">
+                <label asp-for="ProfileDescription" class="form-label fw-semibold">Profile summary</label>
+                <textarea asp-for="ProfileDescription" class="form-control form-control-lg" rows="5" placeholder="Briefly introduce yourself, your background and strengths."></textarea>
+                <div class="form-hint">A short recruiter-friendly summary works best.</div>
+                <span asp-validation-for="ProfileDescription" class="text-danger"></span>
+            </div>
+            <div>
+                <label asp-for="CareerObjective" class="form-label fw-semibold">Career objective</label>
+                <textarea asp-for="CareerObjective" class="form-control" rows="4" placeholder="What type of role or career direction are you aiming for?"></textarea>
+                <span asp-validation-for="CareerObjective" class="text-danger"></span>
+            </div>
+        </section>
+
+        <section class="portal-card mb-4">
+            <div class="portal-card-header compact">
+                <div><span class="section-eyebrow">Background</span><h2 class="section-title">Education & experience</h2></div>
+            </div>
+            <div class="row g-3">
+                <div class="col-md-6"><label asp-for="HighestQualification" class="form-label">Highest qualification</label><input asp-for="HighestQualification" class="form-control" placeholder="e.g. Bachelor's Degree" /><span asp-validation-for="HighestQualification" class="text-danger"></span></div>
+                <div class="col-md-6"><label asp-for="FieldOfStudy" class="form-label">Field of study</label><input asp-for="FieldOfStudy" class="form-control" placeholder="e.g. Software Engineering" /><span asp-validation-for="FieldOfStudy" class="text-danger"></span></div>
+                <div class="col-md-8"><label asp-for="UniversityName" class="form-label">University / institution</label><input asp-for="UniversityName" class="form-control" /><span asp-validation-for="UniversityName" class="text-danger"></span></div>
+                <div class="col-md-4"><label asp-for="GraduationYear" class="form-label">Graduation year</label><input asp-for="GraduationYear" class="form-control" type="number" min="1900" max="2100" /><span asp-validation-for="GraduationYear" class="text-danger"></span></div>
+                <div class="col-12"><label asp-for="ExperienceDescription" class="form-label">Experience</label><textarea asp-for="ExperienceDescription" class="form-control" rows="5" placeholder="Include internships, part-time work, projects or relevant achievements."></textarea><span asp-validation-for="ExperienceDescription" class="text-danger"></span></div>
+            </div>
+        </section>
+
+        <section class="portal-card mb-4">
+            <div class="portal-card-header compact">
+                <div><span class="section-eyebrow">Preferences</span><h2 class="section-title">What are you looking for?</h2></div>
+            </div>
+            <div class="row g-3">
+                <div class="col-md-6"><label asp-for="PreferredJobTitle" class="form-label">Preferred job title</label><input asp-for="PreferredJobTitle" class="form-control" placeholder="e.g. Junior Software Developer" /><span asp-validation-for="PreferredJobTitle" class="text-danger"></span></div>
+                <div class="col-md-6"><label asp-for="PreferredLocation" class="form-label">Preferred location</label><input asp-for="PreferredLocation" class="form-control" placeholder="e.g. Kota Kinabalu" /><span asp-validation-for="PreferredLocation" class="text-danger"></span></div>
+                <div class="col-md-6"><label asp-for="ExpectedSalary" class="form-label">Expected monthly salary (RM)</label><input asp-for="ExpectedSalary" class="form-control" type="number" min="0" step="0.01" /><span asp-validation-for="ExpectedSalary" class="text-danger"></span></div>
+                <div class="col-md-6"><label asp-for="AvailabilityDate" class="form-label">Available from</label><input asp-for="AvailabilityDate" class="form-control" type="date" /><span asp-validation-for="AvailabilityDate" class="text-danger"></span></div>
+            </div>
+        </section>
+
+        <div class="d-flex justify-content-end gap-2 mb-4">
+            <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary px-5">Save profile details</button>
+        </div>
+    </form>
+
+    <section class="portal-card mb-4" id="skills-section">
+        <div class="portal-card-header compact">
+            <div><span class="section-eyebrow">Skills</span><h2 class="section-title">Manage skills</h2></div>
+        </div>
+        <form asp-action="AddSkill" method="post" class="mb-3">
+            <div class="row g-2">
+                <div class="col-md-6"><input name="skillName" class="form-control" placeholder="e.g. AWS, Python, SQL" required /></div>
+                <div class="col-md-4">
+                    <select name="proficiencyLevel" class="form-select">
+                        <option value="">Proficiency</option>
+                        <option>Beginner</option>
+                        <option>Intermediate</option>
+                        <option>Advanced</option>
+                    </select>
+                </div>
+                <div class="col-md-2"><button class="btn btn-primary w-100" type="submit">Add</button></div>
+            </div>
+        </form>
+
+        @if (!skills.Any())
+        {
+            <div class="mini-empty">No skills added yet. Skills detected from resume or certification descriptions will also appear here.</div>
+        }
+        else
+        {
+            <div class="skill-chip-list">
+                @foreach (var skill in skills)
+                {
+                    <div class="skill-chip">
+                        <div><strong>@skill.Skill.SkillName</strong><small>@(skill.ProficiencyLevel ?? "Level not set")</small></div>
+                        <form asp-action="RemoveSkill" method="post"><input type="hidden" name="id" value="@skill.JobSeekerSkillId" /><button type="submit" aria-label="Remove skill">×</button></form>
+                    </div>
+                }
+            </div>
+        }
+    </section>
+
+    <section class="portal-card mb-4" id="resume-section">
+        <div class="portal-card-header compact">
+            <div><span class="section-eyebrow">Resume</span><h2 class="section-title">Manage resume</h2></div>
+        </div>
+
+        <form asp-action="UploadResume" method="post" enctype="multipart/form-data" class="inline-add-form mb-4">
+            <div class="row g-2">
+                <div class="col-md-4"><input name="resumeTitle" class="form-control" placeholder="Resume title" /></div>
+                <div class="col-md-5"><input name="resumeFile" type="file" class="form-control" accept=".pdf,.doc,.docx" required /></div>
+                <div class="col-md-3"><button class="btn btn-primary w-100" type="submit">Upload resume</button></div>
+            </div>
+            <textarea name="resumeDescription" class="form-control mt-2" rows="3" placeholder="Describe your experience and skills, e.g. Built web applications using C#, SQL and AWS." required></textarea>
+            <div class="form-text">The system searches this description against skills already stored in the Skills table.</div>
+        </form>
+
+        @if (!resumes.Any())
+        {
+            <div class="mini-empty">No resume uploaded yet.</div>
+        }
+        else
+        {
+            <div class="document-list">
+                @foreach (var resume in resumes)
+                {
+                    <div class="document-item">
+                        <div class="document-icon">CV</div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <strong>@resume.ResumeTitle</strong>
+                                @if (resume.IsPrimary) { <span class="badge rounded-pill text-bg-success">Primary</span> }
+                            </div>
+                            @if (!string.IsNullOrWhiteSpace(resume.ResumeDescription))
+                            {
+                                <small class="d-block text-muted mb-1">@resume.ResumeDescription</small>
+                            }
+                            <small>Uploaded @resume.UploadedAt.ToLocalTime().ToString("dd MMM yyyy")</small>
+                        </div>
+                        <div class="document-actions">
+                            <a href="@resume.ResumeS3Key" target="_blank" class="btn btn-sm btn-outline-secondary">View</a>
+                            @if (!resume.IsPrimary)
+                            {
+                                <form asp-action="SetPrimaryResume" method="post"><input type="hidden" name="id" value="@resume.ResumeId" /><button class="btn btn-sm btn-outline-primary">Set primary</button></form>
+                            }
+                            <form asp-action="DeleteResume" method="post" onsubmit="return confirm('Delete this resume?');"><input type="hidden" name="id" value="@resume.ResumeId" /><button class="btn btn-sm btn-outline-danger">Delete</button></form>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </section>
+
+    <section class="portal-card mb-4" id="certification-section">
+        <div class="portal-card-header compact">
+            <div><span class="section-eyebrow">Certifications</span><h2 class="section-title">Manage certifications</h2></div>
+        </div>
+
+        <form asp-action="UploadCertification" method="post" enctype="multipart/form-data" class="inline-add-form mb-4">
+            <div class="row g-2">
+                <div class="col-md-4"><input name="certificationName" class="form-control" placeholder="Certification name" required /></div>
+                <div class="col-md-5"><input name="certificateFile" type="file" class="form-control" accept=".pdf,.jpg,.jpeg,.png" required /></div>
+                <div class="col-md-3"><button class="btn btn-primary w-100" type="submit">Upload certification</button></div>
+            </div>
+            <textarea name="description" class="form-control mt-2" rows="3" placeholder="Describe what you learned or the skills covered, e.g. AWS cloud fundamentals and deployment." required></textarea>
+            <div class="form-text">The system searches this description against skills already stored in the Skills table.</div>
+        </form>
+
+        @if (!certifications.Any())
+        {
+            <div class="mini-empty">No certifications uploaded yet.</div>
+        }
+        else
+        {
+            <div class="document-list">
+                @foreach (var certification in certifications)
+                {
+                    <div class="document-item">
+                        <div class="document-icon">✓</div>
+                        <div class="flex-grow-1">
+                            <strong>@certification.CertificationName</strong>
+                            <small>@(certification.Description ?? "No description")</small>
+                        </div>
+                        <div class="document-actions">
+                            <a href="@certification.CertificateS3Key" target="_blank" class="btn btn-sm btn-outline-secondary">View</a>
+                            <form asp-action="DeleteCertification" method="post" onsubmit="return confirm('Delete this certification?');"><input type="hidden" name="id" value="@certification.CertificationId" /><button class="btn btn-sm btn-outline-danger">Delete</button></form>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </section>
+</div>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

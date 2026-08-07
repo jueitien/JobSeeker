@@ -1,0 +1,133 @@
+@model IReadOnlyList<JobSeeker.Models.JobApplication>
+@{
+    ViewData["Title"] = "My Applications";
+    var selectedStatus = ViewBag.SelectedStatus as string;
+    var statuses = new[] { "SUBMITTED", "UNDER_REVIEW", "SHORTLISTED", "INTERVIEW", "OFFERED", "HIRED", "REJECTED", "WITHDRAWN" };
+}
+
+<div class="applications-page">
+    <div class="jobs-page-heading">
+        <div>
+            <span class="section-eyebrow">Job applications</span>
+            <h1>My applications</h1>
+            <p>Track the latest status of every job you have applied for.</p>
+        </div>
+        <a asp-controller="Home" asp-action="JobSeeker" class="btn btn-primary">Find jobs</a>
+    </div>
+
+    @if (TempData["SuccessMessage"] is string successMessage)
+    {
+        <div class="alert alert-success portal-alert">@successMessage</div>
+    }
+    @if (TempData["InfoMessage"] is string infoMessage)
+    {
+        <div class="alert alert-info portal-alert">@infoMessage</div>
+    }
+    @if (TempData["ErrorMessage"] is string errorMessage)
+    {
+        <div class="alert alert-danger portal-alert">@errorMessage</div>
+    }
+
+    <div class="application-filter-bar">
+        <a asp-action="Index" class="application-filter @(string.IsNullOrWhiteSpace(selectedStatus) ? "active" : "")">All</a>
+        @foreach (var status in statuses)
+        {
+            <a asp-action="Index" asp-route-status="@status" class="application-filter @(selectedStatus == status ? "active" : "")">@Friendly(status)</a>
+        }
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="portal-card empty-job-list">
+            <h3>No applications yet</h3>
+            <p>Jobs you apply for will appear here together with their latest application status.</p>
+            <a asp-controller="Home" asp-action="JobSeeker" class="btn btn-primary">Browse jobs</a>
+        </div>
+    }
+    else
+    {
+        <div class="application-list">
+            @foreach (var application in Model)
+            {
+                <article class="application-card">
+                    <div class="application-main">
+                        <div class="job-company-logo">@Initials(application.Job.CompanyName)</div>
+                        <div class="application-content">
+                            <div class="application-title-row">
+                                <div>
+                                    <h2>@application.Job.JobTitle</h2>
+                                    <div class="job-company-name">@application.Job.CompanyName</div>
+                                </div>
+                                <span class="application-status-badge status-@application.ApplicationStatus.ToLowerInvariant().Replace("_", "-")">
+                                    @Friendly(application.ApplicationStatus)
+                                </span>
+                            </div>
+
+                            <div class="application-meta-grid">
+                                <div>
+                                    <label>Applied</label>
+                                    <strong>@application.AppliedAt.ToLocalTime().ToString("dd MMM yyyy")</strong>
+                                </div>
+                                <div>
+                                    <label>Match when applied</label>
+                                    <strong>@(application.MatchPercentageAtApplication?.ToString("0") ?? "-")%</strong>
+                                </div>
+                                <div>
+                                    <label>Resume</label>
+                                    <strong>@(application.Resume.ResumeTitle ?? "Primary resume")</strong>
+                                </div>
+                                <div>
+                                    <label>Location</label>
+                                    <strong>@(application.Job.Location ?? "Not specified")</strong>
+                                </div>
+                            </div>
+
+                            @if (!string.IsNullOrWhiteSpace(application.EmployerNotes))
+                            {
+                                <div class="employer-note">
+                                    <strong>Employer note</strong>
+                                    <p>@application.EmployerNotes</p>
+                                </div>
+                            }
+
+                            <div class="application-actions">
+                                @if (application.Job.IsTestData && application.ApplicationStatus is not "HIRED" and not "REJECTED" and not "WITHDRAWN")
+                                {
+                                    <form asp-action="AdvanceTestStatus" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@application.ApplicationId" />
+                                        <button class="btn btn-sm btn-outline-secondary" type="submit">Test next status</button>
+                                    </form>
+                                }
+
+                                @if (application.ApplicationStatus is not "HIRED" and not "REJECTED" and not "WITHDRAWN")
+                                {
+                                    <form asp-action="Withdraw" method="post" onsubmit="return confirm('Withdraw this application?');">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@application.ApplicationId" />
+                                        <button class="btn btn-sm btn-outline-danger" type="submit">Withdraw</button>
+                                    </form>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            }
+        </div>
+    }
+</div>
+
+@functions {
+    private static string Friendly(string value)
+    {
+        var words = value.Replace("_", " ").ToLowerInvariant();
+        return System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(words);
+    }
+
+    private static string Initials(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return "J";
+        var parts = value.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return string.Concat(parts.Take(2).Select(x => char.ToUpperInvariant(x[0])));
+    }
+}
