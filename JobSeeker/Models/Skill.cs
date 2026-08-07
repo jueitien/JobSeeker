@@ -14,5 +14,7 @@ namespace JobSeeker.Models
         public DateTime CreatedAt { get; set; }
 
         public ICollection<JobSeekerSkill> JobSeekerSkills { get; set; } = new List<JobSeekerSkill>();
+
+        public ICollection<JobRequiredSkill> JobRequiredSkills { get; set; } = new List<JobRequiredSkill>();
     }
 }

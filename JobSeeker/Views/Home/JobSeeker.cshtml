@@ -1,20 +1,223 @@
-﻿@{
-    ViewData["Title"] = "Job Seeker Home";
+@model JobSeeker.Models.ViewModels.JobSeekerHomeViewModel
+@{
+    ViewData["Title"] = "Find Jobs";
 }
 
-<div class="p-4 p-md-5 mb-4 bg-light rounded-3">
-    <div class="container-fluid py-2">
-        <h1 class="display-5 fw-bold mb-3">Job Seeker Home</h1>
-        <p class="col-md-8 fs-5">
-            Welcome, @User.Identity?.Name. Use your profile area to manage the details stored in the Identity database.
-        </p>
-
-        <a asp-controller="Profile"
-           asp-action="Index"
-           class="btn btn-primary btn-lg">
-            Open Profile
-        </a>
+<div class="jobs-page">
+    <div class="jobs-page-heading">
+        <div>
+            <span class="section-eyebrow">Job search</span>
+            <h1>Find your next job</h1>
+            <p>Browse all available vacancies and compare how well they match your profile.</p>
+        </div>
+        <form asp-controller="Home" asp-action="GenerateTestJobs" method="post">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-outline-primary">Generate 5 test jobs</button>
+        </form>
     </div>
+
+    @if (TempData["SuccessMessage"] is string successMessage)
+    {
+        <div class="alert alert-success portal-alert">@successMessage</div>
+    }
+    @if (TempData["InfoMessage"] is string infoMessage)
+    {
+        <div class="alert alert-info portal-alert">@infoMessage</div>
+    }
+    @if (TempData["ErrorMessage"] is string errorMessage)
+    {
+        <div class="alert alert-danger portal-alert">@errorMessage</div>
+    }
+
+    <section class="job-filter-card mb-4">
+        <form asp-controller="Home" asp-action="JobSeeker" method="get" class="job-filter-form">
+            <div class="filter-keyword">
+                <label class="form-label">Keywords</label>
+                <input name="keyword" value="@Model.Keyword" class="form-control" placeholder="Job title, company or skill" />
+            </div>
+
+            <div>
+                <label class="form-label">Location</label>
+                <select name="location" class="form-select">
+                    <option value="">All locations</option>
+                    @foreach (var location in Model.AvailableLocations)
+                    {
+                        <option value="@location" selected="@(Model.Location == location)">@location</option>
+                    }
+                </select>
+            </div>
+
+            <div>
+                <label class="form-label">Job type</label>
+                <select name="employmentType" class="form-select">
+                    <option value="">All job types</option>
+                    @foreach (var type in Model.AvailableEmploymentTypes)
+                    {
+                        <option value="@type" selected="@(Model.EmploymentType == type)">@Friendly(type)</option>
+                    }
+                </select>
+            </div>
+
+            <div>
+                <label class="form-label">Work arrangement</label>
+                <select name="workplaceType" class="form-select">
+                    <option value="">All arrangements</option>
+                    @foreach (var type in Model.AvailableWorkplaceTypes)
+                    {
+                        <option value="@type" selected="@(Model.WorkplaceType == type)">@Friendly(type)</option>
+                    }
+                </select>
+            </div>
+
+            <div>
+                <label class="form-label">Minimum salary</label>
+                <input name="minimumSalary" value="@Model.MinimumSalary" class="form-control" type="number" min="0" step="100" placeholder="RM" />
+            </div>
+
+            <div>
+                <label class="form-label">Sort by</label>
+                <select name="sort" class="form-select">
+                    <option value="match" selected="@(Model.Sort == "match")">Best match</option>
+                    <option value="newest" selected="@(Model.Sort == "newest")">Newest</option>
+                    <option value="salary" selected="@(Model.Sort == "salary")">Highest salary</option>
+                    <option value="title" selected="@(Model.Sort == "title")">Job title</option>
+                </select>
+            </div>
+
+            <div class="filter-actions">
+                <button class="btn btn-primary" type="submit">Search jobs</button>
+                <a asp-controller="Home" asp-action="JobSeeker" class="btn btn-light border">Clear</a>
+            </div>
+        </form>
+    </section>
+
+    <div class="job-results-heading">
+        <div>
+            <strong>@Model.Jobs.Count job@(Model.Jobs.Count == 1 ? "" : "s") available</strong>
+            <span>Match scores use your saved skills and career profile.</span>
+        </div>
+        <a asp-controller="Applications" asp-action="Index" class="portal-link">My applications →</a>
+    </div>
+
+    @if (!Model.Jobs.Any())
+    {
+        <div class="portal-card empty-job-list">
+            <h3>No jobs found</h3>
+            <p>Try clearing some filters, or generate the 5 sample jobs to test the job matching system.</p>
+        </div>
+    }
+    else
+    {
+        <div class="job-result-list">
+            @foreach (var item in Model.Jobs)
+            {
+                var job = item.Job;
+                <article class="job-result-card">
+                    <div class="job-result-main">
+                        <div class="job-company-logo">@Initials(job.CompanyName)</div>
+
+                        <div class="job-result-content">
+                            <div class="job-title-row">
+                                <div>
+                                    <h2>@job.JobTitle</h2>
+                                    <div class="job-company-name">@job.CompanyName</div>
+                                </div>
+                                <div class="match-score @(item.MatchPercentage >= 70 ? "match-high" : item.MatchPercentage >= 40 ? "match-medium" : "match-low")">
+                                    <strong>@item.MatchPercentage.ToString("0")%</strong>
+                                    <span>match</span>
+                                </div>
+                            </div>
+
+                            <div class="job-meta-row">
+                                @if (!string.IsNullOrWhiteSpace(job.Location))
+                                {
+                                    <span>📍 @job.Location</span>
+                                }
+                                <span>💼 @Friendly(job.EmploymentType)</span>
+                                @if (!string.IsNullOrWhiteSpace(job.WorkplaceType))
+                                {
+                                    <span>🏢 @Friendly(job.WorkplaceType)</span>
+                                }
+                                @if (job.MinimumSalary.HasValue || job.MaximumSalary.HasValue)
+                                {
+                                    <span>RM @Salary(job.MinimumSalary) - RM @Salary(job.MaximumSalary)</span>
+                                }
+                            </div>
+
+                            <p class="job-description">@job.JobDescription</p>
+
+                            <div class="job-skill-summary">
+                                <div class="skill-summary-label">
+                                    <strong>@item.MatchedSkillCount/@item.RequiredSkillCount skills matched</strong>
+                                </div>
+                                <div class="job-skill-chips">
+                                    @foreach (var required in job.RequiredSkills.OrderByDescending(x => x.ImportanceWeight))
+                                    {
+                                        var matched = item.MatchedSkills.Contains(required.Skill.SkillName);
+                                        <span class="job-skill-chip @(matched ? "matched" : "missing")">
+                                            @required.Skill.SkillName
+                                            @if (matched)
+                                            {
+                                                <span>✓</span>
+                                            }
+                                        </span>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="job-card-footer">
+                                <div class="job-posted-info">
+                                    @if (job.ApplicationDeadline.HasValue)
+                                    {
+                                        <span>Apply by @job.ApplicationDeadline.Value.ToString("dd MMM yyyy")</span>
+                                    }
+                                    @if (job.IsTestData)
+                                    {
+                                        <span class="test-data-tag">Test job</span>
+                                    }
+                                </div>
+
+                                @if (item.HasApplied)
+                                {
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="application-status-badge">@Friendly(item.ApplicationStatus ?? "SUBMITTED")</span>
+                                        <a asp-controller="Applications" asp-action="Index" class="btn btn-outline-primary btn-sm">View application</a>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <form asp-controller="Applications" asp-action="Apply" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="jobId" value="@job.JobId" />
+                                        <button type="submit" class="btn btn-primary">Apply now</button>
+                                    </form>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            }
+        </div>
+    }
 </div>
 
-<p>Find suitable jobs, manage your profile and track your applications.</p>
+@functions {
+    private static string Friendly(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return "";
+        var words = value.Replace("_", " ").ToLowerInvariant();
+        return System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(words);
+    }
+
+    private static string Salary(decimal? value)
+    {
+        return value.HasValue ? value.Value.ToString("N0") : "-";
+    }
+
+    private static string Initials(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return "J";
+        var parts = value.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return string.Concat(parts.Take(2).Select(x => char.ToUpperInvariant(x[0])));
+    }
+}

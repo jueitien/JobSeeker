@@ -51,5 +51,7 @@ namespace JobSeeker.Models
         public ICollection<Certification> Certifications { get; set; } = new List<Certification>();
 
         public ICollection<JobSeekerSkill> JobSeekerSkills { get; set; } = new List<JobSeekerSkill>();
+
+        public ICollection<JobApplication> JobApplications { get; set; } = new List<JobApplication>();
     }
 }

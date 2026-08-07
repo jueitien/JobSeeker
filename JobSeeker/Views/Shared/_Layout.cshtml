@@ -49,29 +49,13 @@
                     <ul class="navbar-nav flex-grow-1">
                         @if (User.Identity?.IsAuthenticated == true)
                         {
-                            <li class="nav-item">
-                                <a class="nav-link text-dark"
-                                   asp-controller="Home"
-                                   asp-action="Index">
-                                    Home
-                                </a>
-                            </li>
-
                             @if (User.IsInRole("Job Seeker"))
                             {
                                 <li class="nav-item">
                                     <a class="nav-link text-dark"
-                                       asp-controller="Profile"
-                                       asp-action="Index">
-                                        Profile
-                                    </a>
-                                </li>
-
-                                <li class="nav-item">
-                                    <a class="nav-link text-dark"
-                                       asp-controller="Jobs"
-                                       asp-action="Index">
-                                        Find Jobs
+                                       asp-controller="Home"
+                                       asp-action="JobSeeker">
+                                        Jobs
                                     </a>
                                 </li>
 
@@ -80,6 +64,17 @@
                                        asp-controller="Applications"
                                        asp-action="Index">
                                         Applications
+                                    </a>
+                                </li>
+
+                            }
+                            else
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark"
+                                       asp-controller="Home"
+                                       asp-action="Index">
+                                        Home
                                     </a>
                                 </li>
                             }
@@ -228,25 +223,7 @@
                     </ul>
 
                     <ul class="navbar-nav ms-auto">
-                        @if (User.Identity?.IsAuthenticated == true)
-                        {
-                            <li class="nav-item">
-                                <span class="nav-link text-muted">
-                                    @User.Identity.Name
-                                </span>
-                            </li>
-
-                            <li class="nav-item">
-                                <form asp-controller="Account"
-                                      asp-action="Logout"
-                                      method="post">
-                                    <button type="submit"
-                                            class="nav-link btn btn-link text-dark border-0">
-                                        Logout
-                                    </button>
-                                </form>
-                            </li>
-                        }
+                        <partial name="_LoginPartial" />
                     </ul>
                 </div>
             </div>

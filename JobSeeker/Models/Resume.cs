@@ -26,5 +26,7 @@ namespace JobSeeker.Models
         public DateTime UploadedAt { get; set; }
 
         public JobSeekerProfile JobSeekerProfile { get; set; } = null!;
+
+        public ICollection<JobApplication> JobApplications { get; set; } = new List<JobApplication>();
     }
 }

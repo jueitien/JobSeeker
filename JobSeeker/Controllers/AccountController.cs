@@ -1,4 +1,5 @@
-﻿using JobSeeker.Models;
+using JobSeeker.Models;
+using JobSeeker.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -182,6 +183,64 @@ namespace JobSeeker.Controllers
                 "No valid role is assigned to this account.");
 
             return View(model);
+        }
+
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> EditAccount()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+                return Challenge();
+
+            return View(new EditAccountViewModel
+            {
+                FullName = user.FullName,
+                Email = user.Email ?? string.Empty,
+                PhoneNumber = user.PhoneNumber
+            });
+        }
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditAccount(EditAccountViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+                return Challenge();
+
+            var normalizedEmail = model.Email.Trim();
+            var existing = await _userManager.FindByEmailAsync(normalizedEmail);
+            if (existing != null && existing.Id != user.Id)
+            {
+                ModelState.AddModelError(nameof(model.Email), "This email address is already in use.");
+                return View(model);
+            }
+
+            user.FullName = model.FullName.Trim();
+            user.Email = normalizedEmail;
+            user.UserName = normalizedEmail;
+            user.PhoneNumber = string.IsNullOrWhiteSpace(model.PhoneNumber)
+                ? null
+                : model.PhoneNumber.Trim();
+
+            var result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+            {
+                foreach (var error in result.Errors)
+                    ModelState.AddModelError(string.Empty, error.Description);
+
+                return View(model);
+            }
+
+            await _signInManager.RefreshSignInAsync(user);
+            TempData["SuccessMessage"] = "Account details updated.";
+
+            return RedirectToAction(nameof(EditAccount));
         }
 
         [Authorize]

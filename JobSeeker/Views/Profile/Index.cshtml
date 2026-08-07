@@ -2,143 +2,212 @@
 
 @{
     ViewData["Title"] = "My Profile";
+    var profile = Model.Profile;
+    var completionItems = new bool[]
+    {
+        profile != null && !string.IsNullOrWhiteSpace(profile.ProfileDescription),
+        profile != null && !string.IsNullOrWhiteSpace(profile.CareerObjective),
+        profile != null && !string.IsNullOrWhiteSpace(profile.HighestQualification),
+        profile != null && !string.IsNullOrWhiteSpace(profile.FieldOfStudy),
+        profile != null && !string.IsNullOrWhiteSpace(profile.UniversityName),
+        profile?.GraduationYear.HasValue == true,
+        profile != null && !string.IsNullOrWhiteSpace(profile.ExperienceDescription),
+        profile != null && !string.IsNullOrWhiteSpace(profile.PreferredJobTitle),
+        profile != null && !string.IsNullOrWhiteSpace(profile.PreferredLocation),
+        Model.Resumes.Any(),
+        Model.Skills.Any()
+    };
+    var completion = (int)Math.Round(completionItems.Count(x => x) * 100.0 / completionItems.Length);
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h1 class="mb-1">My Profile</h1>
-        <p class="text-muted mb-0">View your saved job seeker information.</p>
-    </div>
+<div class="profile-page">
+    @if (TempData["SuccessMessage"] is string successMessage)
+    {
+        <div class="alert alert-success portal-alert">@successMessage</div>
+    }
 
-    <a asp-action="Edit" class="btn btn-primary">
-        Create / Update Profile
-    </a>
-</div>
-
-@if (TempData["SuccessMessage"] is string successMessage)
-{
-    <div class="alert alert-success">@successMessage</div>
-}
-
-@if (Model.Profile == null)
-{
-    <div class="alert alert-info">
-        You have not created a profile yet. Use the button above to add your information.
-    </div>
-}
-else
-{
-    <div class="card mb-4">
-        <div class="card-header">Profile Summary</div>
-        <div class="card-body">
-            <dl class="row mb-0">
-                <dt class="col-sm-3">Objective</dt>
-                <dd class="col-sm-9">@Model.Profile.CareerObjective</dd>
-
-                <dt class="col-sm-3">Description</dt>
-                <dd class="col-sm-9">@Model.Profile.ProfileDescription</dd>
-
-                <dt class="col-sm-3">Qualification</dt>
-                <dd class="col-sm-9">@Model.Profile.HighestQualification</dd>
-
-                <dt class="col-sm-3">Field of Study</dt>
-                <dd class="col-sm-9">@Model.Profile.FieldOfStudy</dd>
-
-                <dt class="col-sm-3">University</dt>
-                <dd class="col-sm-9">@Model.Profile.UniversityName</dd>
-
-                <dt class="col-sm-3">Graduation Year</dt>
-                <dd class="col-sm-9">@Model.Profile.GraduationYear</dd>
-
-                <dt class="col-sm-3">Experience</dt>
-                <dd class="col-sm-9">@Model.Profile.ExperienceDescription</dd>
-
-                <dt class="col-sm-3">Preferred Job</dt>
-                <dd class="col-sm-9">@Model.Profile.PreferredJobTitle</dd>
-
-                <dt class="col-sm-3">Preferred Location</dt>
-                <dd class="col-sm-9">@Model.Profile.PreferredLocation</dd>
-
-                <dt class="col-sm-3">Expected Salary</dt>
-                <dd class="col-sm-9">@Model.Profile.ExpectedSalary?.ToString("N2")</dd>
-
-                <dt class="col-sm-3">Availability Date</dt>
-                <dd class="col-sm-9">@Model.Profile.AvailabilityDate</dd>
-            </dl>
+    <section class="profile-hero-card mb-4">
+        <div class="profile-identity">
+            <div class="profile-avatar large">@(ViewBag.UserName?.ToString()?.Substring(0,1).ToUpper())</div>
+            <div class="flex-grow-1">
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                    <h1>@ViewBag.UserName</h1>
+                    <span class="profile-status-badge">Job seeker</span>
+                </div>
+                <p class="profile-headline">@(profile?.PreferredJobTitle ?? "Add your preferred job title")</p>
+                <div class="profile-meta">
+                    <span>⌖ @(profile?.PreferredLocation ?? "Add preferred location")</span>
+                    <span>✉ @ViewBag.Email</span>
+                </div>
+            </div>
+            <a asp-action="Edit" class="btn btn-primary px-4">Edit profile</a>
         </div>
-    </div>
-}
 
-<div class="row g-4">
-    <div class="col-lg-4">
-        <div class="card h-100">
-            <div class="card-header">Resumes</div>
-            <div class="card-body">
+        <div class="profile-completion-wrap">
+            <div class="d-flex justify-content-between mb-2">
+                <span>Profile strength</span>
+                <strong>@completion%</strong>
+            </div>
+            <div class="progress profile-progress">
+                <div class="progress-bar" style="width:@completion%"></div>
+            </div>
+        </div>
+    </section>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <section class="portal-card mb-4">
+                <div class="portal-card-header">
+                    <div>
+                        <span class="section-eyebrow">About</span>
+                        <h2 class="section-title">Profile summary</h2>
+                    </div>
+                    <a asp-action="Edit" class="portal-link">Edit</a>
+                </div>
+                <p class="profile-copy">@(!string.IsNullOrWhiteSpace(profile?.ProfileDescription) ? profile.ProfileDescription : "Tell employers about your background, strengths and the kind of work you are looking for.")</p>
+            </section>
+
+            <section class="portal-card mb-4">
+                <div class="portal-card-header">
+                    <div>
+                        <span class="section-eyebrow">Career</span>
+                        <h2 class="section-title">Career objective & experience</h2>
+                    </div>
+                    <a asp-action="Edit" class="portal-link">Edit</a>
+                </div>
+                <div class="profile-info-block">
+                    <label>Career objective</label>
+                    <p>@(!string.IsNullOrWhiteSpace(profile?.CareerObjective) ? profile.CareerObjective : "Not added yet")</p>
+                </div>
+                <div class="profile-info-block mb-0">
+                    <label>Experience</label>
+                    <p>@(!string.IsNullOrWhiteSpace(profile?.ExperienceDescription) ? profile.ExperienceDescription : "Not added yet")</p>
+                </div>
+            </section>
+
+            <section class="portal-card mb-4">
+                <div class="portal-card-header">
+                    <div>
+                        <span class="section-eyebrow">Education</span>
+                        <h2 class="section-title">Education details</h2>
+                    </div>
+                    <a asp-action="Edit" class="portal-link">Edit</a>
+                </div>
+                <div class="info-grid">
+                    <div><label>Highest qualification</label><strong>@(profile?.HighestQualification ?? "Not added")</strong></div>
+                    <div><label>Field of study</label><strong>@(profile?.FieldOfStudy ?? "Not added")</strong></div>
+                    <div><label>University</label><strong>@(profile?.UniversityName ?? "Not added")</strong></div>
+                    <div><label>Graduation year</label><strong>@(profile?.GraduationYear?.ToString() ?? "Not added")</strong></div>
+                </div>
+            </section>
+
+            <section class="portal-card mb-4">
+                <div class="portal-card-header">
+                    <div>
+                        <span class="section-eyebrow">Documents</span>
+                        <h2 class="section-title">Resume</h2>
+                    </div>
+                    <a asp-action="Edit" class="portal-link">Manage</a>
+                </div>
+
                 @if (!Model.Resumes.Any())
                 {
-                    <p class="text-muted mb-0">No resumes uploaded yet.</p>
+                    <div class="mini-empty">No resume uploaded yet.</div>
                 }
                 else
                 {
-                    <ul class="list-group list-group-flush">
+                    <div class="profile-document-list">
                         @foreach (var resume in Model.Resumes)
                         {
-                            <li class="list-group-item">
-                                <div class="fw-semibold">@resume.ResumeTitle</div>
-                                <div class="small text-muted">@resume.ResumeS3Key</div>
-                            </li>
+                            <article class="profile-document-card">
+                                <div class="profile-document-icon">CV</div>
+                                <div class="profile-document-content">
+                                    <div class="profile-document-title-row">
+                                        <strong>@(resume.ResumeTitle ?? "Resume")</strong>
+                                        @if (resume.IsPrimary)
+                                        {
+                                            <span class="primary-document-badge">Primary</span>
+                                        }
+                                    </div>
+                                    <p>@(!string.IsNullOrWhiteSpace(resume.ResumeDescription) ? resume.ResumeDescription : "No description added.")</p>
+                                    <small>Uploaded @resume.UploadedAt.ToLocalTime().ToString("dd MMM yyyy")</small>
+                                </div>
+                                <a href="@resume.ResumeS3Key" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary">View document</a>
+                            </article>
                         }
-                    </ul>
+                    </div>
                 }
-            </div>
-        </div>
-    </div>
+            </section>
 
-    <div class="col-lg-4">
-        <div class="card h-100">
-            <div class="card-header">Certifications</div>
-            <div class="card-body">
+            <section class="portal-card mb-4">
+                <div class="portal-card-header">
+                    <div>
+                        <span class="section-eyebrow">Qualifications</span>
+                        <h2 class="section-title">Certifications</h2>
+                    </div>
+                    <a asp-action="Edit" class="portal-link">Manage</a>
+                </div>
+
                 @if (!Model.Certifications.Any())
                 {
-                    <p class="text-muted mb-0">No certifications uploaded yet.</p>
+                    <div class="mini-empty">No certifications uploaded yet.</div>
                 }
                 else
                 {
-                    <ul class="list-group list-group-flush">
+                    <div class="profile-document-list">
                         @foreach (var certification in Model.Certifications)
                         {
-                            <li class="list-group-item">
-                                <div class="fw-semibold">@certification.CertificationName</div>
-                                <div class="small text-muted">@certification.CertificateS3Key</div>
-                            </li>
+                            <article class="profile-document-card">
+                                <div class="profile-document-icon certificate">CERT</div>
+                                <div class="profile-document-content">
+                                    <strong>@certification.CertificationName</strong>
+                                    <p>@(!string.IsNullOrWhiteSpace(certification.Description) ? certification.Description : "No description added.")</p>
+                                    <small>Uploaded @certification.UploadedAt.ToLocalTime().ToString("dd MMM yyyy")</small>
+                                </div>
+                                <a href="@certification.CertificateS3Key" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary">View document</a>
+                            </article>
                         }
-                    </ul>
+                    </div>
                 }
-            </div>
+            </section>
         </div>
-    </div>
 
-    <div class="col-lg-4">
-        <div class="card h-100">
-            <div class="card-header">Skills</div>
-            <div class="card-body">
+        <div class="col-lg-4">
+            <section class="portal-card mb-4">
+                <div class="portal-card-header compact"><h2 class="section-title">Job preferences</h2></div>
+                <div class="preference-list">
+                    <div><label>Preferred role</label><strong>@(profile?.PreferredJobTitle ?? "Not added")</strong></div>
+                    <div><label>Location</label><strong>@(profile?.PreferredLocation ?? "Not added")</strong></div>
+                    <div><label>Expected salary</label><strong>@(profile?.ExpectedSalary.HasValue == true ? $"RM {profile.ExpectedSalary:N0}" : "Not added")</strong></div>
+                    <div><label>Available from</label><strong>@(profile?.AvailabilityDate?.ToString("dd MMM yyyy") ?? "Not added")</strong></div>
+                </div>
+            </section>
+
+            <section class="portal-card">
+                <div class="portal-card-header compact">
+                    <h2 class="section-title">Skills</h2>
+                    <a asp-action="Edit" class="portal-link">Manage</a>
+                </div>
+
                 @if (!Model.Skills.Any())
                 {
-                    <p class="text-muted mb-0">No skills linked yet.</p>
+                    <div class="mini-empty">No skills added yet.</div>
                 }
                 else
                 {
-                    <ul class="list-group list-group-flush">
+                    <div class="skill-chip-list">
                         @foreach (var skill in Model.Skills)
                         {
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <span>@skill.Skill.SkillName</span>
-                                <span class="badge text-bg-secondary">@skill.ProficiencyLevel</span>
-                            </li>
+                            <div class="skill-chip">
+                                <div>
+                                    <strong>@skill.Skill.SkillName</strong>
+                                    <small>@(skill.ProficiencyLevel ?? "Level not set")</small>
+                                </div>
+                            </div>
                         }
-                    </ul>
+                    </div>
                 }
-            </div>
+            </section>
         </div>
     </div>
 </div>

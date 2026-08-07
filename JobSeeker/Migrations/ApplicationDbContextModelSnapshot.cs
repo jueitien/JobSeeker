@@ -228,6 +228,191 @@ namespace JobSeeker.Migrations
                     b.ToTable("job_seeker_skills", (string)null);
                 });
 
+
+            modelBuilder.Entity("JobSeeker.Models.Job", b =>
+                {
+                    b.Property<long>("JobId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("JobId"));
+
+                    b.Property<string>("ApprovalStatus")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)")
+                        .HasDefaultValue("APPROVED");
+
+                    b.Property<DateOnly?>("ApplicationDeadline")
+                        .HasColumnType("date");
+
+                    b.Property<string>("CompanyName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("EmployerId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("EmploymentType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("IsTestData")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("JobDescription")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("JobStatus")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)")
+                        .HasDefaultValue("OPEN");
+
+                    b.Property<string>("JobTitle")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Location")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<decimal?>("MaximumSalary")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("decimal(12,2)");
+
+                    b.Property<decimal>("MinimumExperienceYears")
+                        .HasPrecision(4, 1)
+                        .HasColumnType("decimal(4,1)");
+
+                    b.Property<string>("MinimumQualification")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<decimal?>("MinimumSalary")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("decimal(12,2)");
+
+                    b.Property<string>("PreferredFieldOfStudy")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("Responsibilities")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<int>("VacancyCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("WorkplaceType")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.HasKey("JobId");
+                    b.HasIndex("EmployerId");
+                    b.HasIndex("Location");
+                    b.HasIndex("JobStatus", "ApprovalStatus");
+                    b.ToTable("jobs", (string)null);
+                });
+
+            modelBuilder.Entity("JobSeeker.Models.JobApplication", b =>
+                {
+                    b.Property<long>("ApplicationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("ApplicationId"));
+
+                    b.Property<string>("ApplicationStatus")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)")
+                        .HasDefaultValue("SUBMITTED");
+
+                    b.Property<DateTime>("AppliedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("CoverLetter")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("EmployerNotes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("JobId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("JobSeekerId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<decimal?>("MatchPercentageAtApplication")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<long>("ResumeId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.HasKey("ApplicationId");
+                    b.HasIndex("ResumeId");
+                    b.HasIndex("JobId", "JobSeekerId").IsUnique();
+                    b.HasIndex("JobSeekerId", "ApplicationStatus");
+                    b.ToTable("job_applications", (string)null);
+                });
+
+            modelBuilder.Entity("JobSeeker.Models.JobRequiredSkill", b =>
+                {
+                    b.Property<long>("JobRequiredSkillId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("JobRequiredSkillId"));
+
+                    b.Property<decimal>("ImportanceWeight")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<long>("JobId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("RequirementType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<long>("SkillId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("JobRequiredSkillId");
+                    b.HasIndex("SkillId");
+                    b.HasIndex("JobId", "SkillId").IsUnique();
+                    b.ToTable("job_required_skills", (string)null);
+                });
+
             modelBuilder.Entity("JobSeeker.Models.Resume", b =>
                 {
                     b.Property<long>("ResumeId")
@@ -471,6 +656,60 @@ namespace JobSeeker.Migrations
                     b.Navigation("Skill");
                 });
 
+
+            modelBuilder.Entity("JobSeeker.Models.Job", b =>
+                {
+                    b.HasOne("JobSeeker.Models.ApplicationUser", "Employer")
+                        .WithMany()
+                        .HasForeignKey("EmployerId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Employer");
+                });
+
+            modelBuilder.Entity("JobSeeker.Models.JobApplication", b =>
+                {
+                    b.HasOne("JobSeeker.Models.Job", "Job")
+                        .WithMany("Applications")
+                        .HasForeignKey("JobId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("JobSeeker.Models.JobSeekerProfile", "JobSeekerProfile")
+                        .WithMany("JobApplications")
+                        .HasForeignKey("JobSeekerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("JobSeeker.Models.Resume", "Resume")
+                        .WithMany("JobApplications")
+                        .HasForeignKey("ResumeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Job");
+                    b.Navigation("JobSeekerProfile");
+                    b.Navigation("Resume");
+                });
+
+            modelBuilder.Entity("JobSeeker.Models.JobRequiredSkill", b =>
+                {
+                    b.HasOne("JobSeeker.Models.Job", "Job")
+                        .WithMany("RequiredSkills")
+                        .HasForeignKey("JobId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("JobSeeker.Models.Skill", "Skill")
+                        .WithMany("JobRequiredSkills")
+                        .HasForeignKey("SkillId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Job");
+                    b.Navigation("Skill");
+                });
+
             modelBuilder.Entity("JobSeeker.Models.Resume", b =>
                 {
                     b.HasOne("JobSeeker.Models.JobSeekerProfile", "JobSeekerProfile")
@@ -542,13 +781,27 @@ namespace JobSeeker.Migrations
                 {
                     b.Navigation("Certifications");
 
+                    b.Navigation("JobApplications");
+
                     b.Navigation("JobSeekerSkills");
 
                     b.Navigation("Resumes");
                 });
 
+            modelBuilder.Entity("JobSeeker.Models.Job", b =>
+                {
+                    b.Navigation("Applications");
+                    b.Navigation("RequiredSkills");
+                });
+
+            modelBuilder.Entity("JobSeeker.Models.Resume", b =>
+                {
+                    b.Navigation("JobApplications");
+                });
+
             modelBuilder.Entity("JobSeeker.Models.Skill", b =>
                 {
+                    b.Navigation("JobRequiredSkills");
                     b.Navigation("JobSeekerSkills");
                 });
 #pragma warning restore 612, 618
