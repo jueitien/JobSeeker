@@ -1,0 +1,88 @@
+/* =============================================================
+   employer.css — Employer role styles
+   ============================================================= */
+
+.emp-page-header {
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.vac-card {
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    border-radius: 0.75rem !important;
+}
+
+.vac-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.10) !important;
+}
+
+.vac-company-logo {
+    width: 42px;
+    height: 42px;
+    border-radius: 0.5rem;
+    background: linear-gradient(135deg, #0d6efd 0%, #6610f2 100%);
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.vac-badge-jobtype {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.3em 0.65em;
+    border-radius: 0.4rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.vac-jobtype-fulltime   { background-color: #d1fae5; color: #065f46; }
+.vac-jobtype-parttime   { background-color: #dbeafe; color: #1e3a8a; }
+.vac-jobtype-contract   { background-color: #fef3c7; color: #78350f; }
+.vac-jobtype-internship { background-color: #ede9fe; color: #4c1d95; }
+
+.vac-chip {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.72rem;
+    color: #495057;
+    background-color: #f1f3f5;
+    border-radius: 999px;
+    padding: 0.2em 0.65em;
+    white-space: nowrap;
+}
+
+.vac-chip-salary {
+    background-color: #ecfdf5;
+    color: #065f46;
+}
+
+.vac-desc-clamp {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.vac-detail-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #6c757d;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 0.15rem;
+}
+
+.input-group .form-control:focus {
+    box-shadow: none;
+    border-color: #86b7fe;
+}
+
+.input-group .input-group-text {
+    border-right: 0;
+}
