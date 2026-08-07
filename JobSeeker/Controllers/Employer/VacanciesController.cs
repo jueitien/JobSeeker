@@ -76,7 +76,7 @@ namespace JobSeeker.Controllers.Employer
         // POST: /Vacancies/Post
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Post(VacancyFormViewModel model)
+        public async Task<IActionResult> Post([Bind(Prefix = "NewVacancy")] VacancyFormViewModel model)
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return Challenge();

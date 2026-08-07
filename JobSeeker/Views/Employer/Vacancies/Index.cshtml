@@ -2,6 +2,10 @@
 
 @{
     ViewData["Title"] = "Job Vacancies";
+    // If the Post action returned this view because validation failed,
+    // ModelState will contain errors tied to "NewVacancy.*" keys.
+    // Reopen the modal automatically so the errors are actually visible.
+    bool hasNewVacancyErrors = ViewData.ModelState.Keys.Any(k => k.StartsWith("NewVacancy"));
 }
 
 <link rel="stylesheet" href="~/css/employer.css" asp-append-version="true" />
@@ -256,6 +260,8 @@ else
                 @Html.AntiForgeryToken()
                 <div class="modal-body">
 
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger small"></div>
+
                     <div class="alert alert-info small">
                         Newly posted vacancies require Administrator approval before they appear to job seekers.
                     </div>
@@ -427,6 +433,21 @@ else
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
     <script src="~/js/employer.js" asp-append-version="true"></script>
+
+    @if (hasNewVacancyErrors)
+    {
+        <script>
+            // Reopen the Post Vacancy modal so validation errors are visible
+            // after a full-page postback (Bootstrap modals don't survive reloads).
+            document.addEventListener('DOMContentLoaded', function () {
+                var modalEl = document.getElementById('postVacancyModal');
+                if (modalEl) {
+                    var modal = new bootstrap.Modal(modalEl);
+                    modal.show();
+                }
+            });
+        </script>
+    }
 }
 
 @functions {

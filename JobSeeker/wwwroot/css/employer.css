@@ -86,3 +86,20 @@
 .input-group .input-group-text {
     border-right: 0;
 }
+
+/* ── Ensure Post Vacancy / Detail modals scroll when content is tall ── */
+#postVacancyModal .modal-dialog,
+#vacancyDetailModal .modal-dialog {
+    max-height: calc(100vh - 3.5rem);
+}
+
+#postVacancyModal .modal-content,
+#vacancyDetailModal .modal-content {
+    max-height: calc(100vh - 3.5rem);
+}
+
+#postVacancyModal .modal-body,
+#vacancyDetailModal .modal-body {
+    overflow-y: auto;
+    max-height: calc(100vh - 12rem);
+}
