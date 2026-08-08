@@ -1,6 +1,7 @@
 using JobSeeker.Data;
 using JobSeeker.Models;
 using JobSeeker.Models.ViewModels;
+using JobSeeker.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -15,15 +16,21 @@ namespace JobSeeker.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IWebHostEnvironment _environment;
+        private readonly S3StorageService _s3Storage;
+        private readonly ILogger<ProfileController> _logger;
 
         public ProfileController(
             ApplicationDbContext context,
             UserManager<ApplicationUser> userManager,
-            IWebHostEnvironment environment)
+            IWebHostEnvironment environment,
+            S3StorageService s3Storage,
+            ILogger<ProfileController> logger)
         {
             _context = context;
             _userManager = userManager;
             _environment = environment;
+            _s3Storage = s3Storage;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -202,6 +209,13 @@ namespace JobSeeker.Controllers
                 return RedirectToAction(nameof(Edit));
             }
 
+            const long maxDocumentBytes = 10 * 1024 * 1024;
+            if (resumeFile.Length > maxDocumentBytes)
+            {
+                TempData["ErrorMessage"] = "Resume must be 10 MB or smaller.";
+                return RedirectToAction(nameof(Edit));
+            }
+
             var allowed = new[] { ".pdf", ".doc", ".docx" };
             var extension = Path.GetExtension(resumeFile.FileName).ToLowerInvariant();
             if (!allowed.Contains(extension))
@@ -210,7 +224,18 @@ namespace JobSeeker.Controllers
                 return RedirectToAction(nameof(Edit));
             }
 
-            var relativePath = await SaveLocalFileAsync(resumeFile, "resumes", user.Id);
+            string s3Key;
+            try
+            {
+                s3Key = await _s3Storage.UploadAsync(resumeFile, "resumes", user.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to upload resume to Amazon S3 for user {UserId}.", user.Id);
+                TempData["ErrorMessage"] = "Resume upload to S3 failed. Check the bucket name, Region and current Learner Lab credentials.";
+                return RedirectToAction(nameof(Edit));
+            }
+
             var hasResume = await _context.Resumes.AnyAsync(x => x.JobSeekerId == user.Id);
 
             var normalizedDescription = Normalize(resumeDescription);
@@ -220,7 +245,7 @@ namespace JobSeeker.Controllers
                 JobSeekerId = user.Id,
                 ResumeTitle = string.IsNullOrWhiteSpace(resumeTitle) ? Path.GetFileNameWithoutExtension(resumeFile.FileName) : resumeTitle.Trim(),
                 ResumeDescription = normalizedDescription,
-                ResumeS3Key = relativePath,
+                ResumeS3Key = s3Key,
                 IsPrimary = !hasResume,
                 UploadedAt = DateTime.UtcNow
             });
@@ -254,6 +279,20 @@ namespace JobSeeker.Controllers
             return RedirectToAction(nameof(Edit));
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ViewResume(long id)
+        {
+            var user = await GetCurrentUserAsync();
+            var resume = await _context.Resumes
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.ResumeId == id && x.JobSeekerId == user.Id);
+
+            if (resume == null)
+                return NotFound();
+
+            return await OpenStoredFileAsync(resume.ResumeS3Key);
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteResume(long id)
@@ -273,7 +312,17 @@ namespace JobSeeker.Controllers
                     return RedirectToAction(nameof(Edit));
                 }
 
-                DeleteLocalFile(resume.ResumeS3Key);
+                try
+                {
+                    await DeleteStoredFileAsync(resume.ResumeS3Key);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to delete resume object {Key} from storage.", resume.ResumeS3Key);
+                    TempData["ErrorMessage"] = "The resume could not be deleted from S3. Check your current AWS credentials.";
+                    return RedirectToAction(nameof(Edit));
+                }
+
                 _context.Resumes.Remove(resume);
                 await _context.SaveChangesAsync();
             }
@@ -294,6 +343,13 @@ namespace JobSeeker.Controllers
                 return RedirectToAction(nameof(Edit));
             }
 
+            const long maxDocumentBytes = 10 * 1024 * 1024;
+            if (certificateFile.Length > maxDocumentBytes)
+            {
+                TempData["ErrorMessage"] = "Certificate must be 10 MB or smaller.";
+                return RedirectToAction(nameof(Edit));
+            }
+
             var allowed = new[] { ".pdf", ".jpg", ".jpeg", ".png" };
             var extension = Path.GetExtension(certificateFile.FileName).ToLowerInvariant();
             if (!allowed.Contains(extension))
@@ -302,7 +358,17 @@ namespace JobSeeker.Controllers
                 return RedirectToAction(nameof(Edit));
             }
 
-            var relativePath = await SaveLocalFileAsync(certificateFile, "certifications", user.Id);
+            string s3Key;
+            try
+            {
+                s3Key = await _s3Storage.UploadAsync(certificateFile, "certifications", user.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to upload certification to Amazon S3 for user {UserId}.", user.Id);
+                TempData["ErrorMessage"] = "Certification upload to S3 failed. Check the bucket name, Region and current Learner Lab credentials.";
+                return RedirectToAction(nameof(Edit));
+            }
 
             var normalizedDescription = Normalize(description);
 
@@ -311,7 +377,7 @@ namespace JobSeeker.Controllers
                 JobSeekerId = user.Id,
                 CertificationName = certificationName.Trim(),
                 Description = normalizedDescription,
-                CertificateS3Key = relativePath,
+                CertificateS3Key = s3Key,
                 UploadedAt = DateTime.UtcNow
             });
 
@@ -324,6 +390,20 @@ namespace JobSeeker.Controllers
             return RedirectToAction(nameof(Edit));
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ViewCertification(long id)
+        {
+            var user = await GetCurrentUserAsync();
+            var certification = await _context.Certifications
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.CertificationId == id && x.JobSeekerId == user.Id);
+
+            if (certification == null)
+                return NotFound();
+
+            return await OpenStoredFileAsync(certification.CertificateS3Key);
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteCertification(long id)
@@ -334,7 +414,17 @@ namespace JobSeeker.Controllers
 
             if (certification != null)
             {
-                DeleteLocalFile(certification.CertificateS3Key);
+                try
+                {
+                    await DeleteStoredFileAsync(certification.CertificateS3Key);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to delete certification object {Key} from storage.", certification.CertificateS3Key);
+                    TempData["ErrorMessage"] = "The certification could not be deleted from S3. Check your current AWS credentials.";
+                    return RedirectToAction(nameof(Edit));
+                }
+
                 _context.Certifications.Remove(certification);
                 await _context.SaveChangesAsync();
             }
@@ -434,28 +524,56 @@ namespace JobSeeker.Controllers
             return profile;
         }
 
-        private async Task<string> SaveLocalFileAsync(IFormFile file, string folder, string userId)
+        private Task<IActionResult> OpenStoredFileAsync(string key)
         {
-            var safeUser = string.Concat(userId.Select(ch => char.IsLetterOrDigit(ch) ? ch : '_'));
-            var uploadFolder = Path.Combine(_environment.WebRootPath, "uploads", folder, safeUser);
-            Directory.CreateDirectory(uploadFolder);
+            if (IsLegacyLocalPath(key))
+            {
+                var fullPath = GetLegacyLocalPath(key);
+                if (!System.IO.File.Exists(fullPath))
+                    return Task.FromResult<IActionResult>(NotFound());
 
-            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
-            var fileName = $"{Guid.NewGuid():N}{extension}";
-            var fullPath = Path.Combine(uploadFolder, fileName);
+                var contentType = S3StorageService.GetContentType(Path.GetExtension(fullPath));
+                return Task.FromResult<IActionResult>(PhysicalFile(fullPath, contentType));
+            }
 
-            await using var stream = new FileStream(fullPath, FileMode.Create);
-            await file.CopyToAsync(stream);
-
-            return $"/uploads/{folder}/{safeUser}/{fileName}";
+            try
+            {
+                return Task.FromResult<IActionResult>(Redirect(_s3Storage.GetPublicUrl(key)));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create public S3 URL for object {Key}.", key);
+                TempData["ErrorMessage"] = "The file URL could not be created. Check the S3 bucket name and Region.";
+                return Task.FromResult<IActionResult>(RedirectToAction(nameof(Index)));
+            }
         }
 
-        private void DeleteLocalFile(string? relativePath)
+        private async Task DeleteStoredFileAsync(string? key)
         {
-            if (string.IsNullOrWhiteSpace(relativePath) || !relativePath.StartsWith("/uploads/")) return;
+            if (string.IsNullOrWhiteSpace(key))
+                return;
+
+            if (IsLegacyLocalPath(key))
+            {
+                var fullPath = GetLegacyLocalPath(key);
+                if (System.IO.File.Exists(fullPath))
+                    System.IO.File.Delete(fullPath);
+                return;
+            }
+
+            await _s3Storage.DeleteAsync(key);
+        }
+
+        private static bool IsLegacyLocalPath(string? key)
+        {
+            return !string.IsNullOrWhiteSpace(key)
+                && key.StartsWith("/uploads/", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private string GetLegacyLocalPath(string relativePath)
+        {
             var local = relativePath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
-            var fullPath = Path.Combine(_environment.WebRootPath, local);
-            if (System.IO.File.Exists(fullPath)) System.IO.File.Delete(fullPath);
+            return Path.Combine(_environment.WebRootPath, local);
         }
 
         private async Task<ApplicationUser> GetCurrentUserAsync()

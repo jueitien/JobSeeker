@@ -153,7 +153,7 @@
                             <small>Uploaded @resume.UploadedAt.ToLocalTime().ToString("dd MMM yyyy")</small>
                         </div>
                         <div class="document-actions">
-                            <a href="@resume.ResumeS3Key" target="_blank" class="btn btn-sm btn-outline-secondary">View</a>
+                            <a asp-action="ViewResume" asp-route-id="@resume.ResumeId" target="_blank" class="btn btn-sm btn-outline-secondary">View</a>
                             @if (!resume.IsPrimary)
                             {
                                 <form asp-action="SetPrimaryResume" method="post"><input type="hidden" name="id" value="@resume.ResumeId" /><button class="btn btn-sm btn-outline-primary">Set primary</button></form>
@@ -197,7 +197,7 @@
                             <small>@(certification.Description ?? "No description")</small>
                         </div>
                         <div class="document-actions">
-                            <a href="@certification.CertificateS3Key" target="_blank" class="btn btn-sm btn-outline-secondary">View</a>
+                            <a asp-action="ViewCertification" asp-route-id="@certification.CertificationId" target="_blank" class="btn btn-sm btn-outline-secondary">View</a>
                             <form asp-action="DeleteCertification" method="post" onsubmit="return confirm('Delete this certification?');"><input type="hidden" name="id" value="@certification.CertificationId" /><button class="btn btn-sm btn-outline-danger">Delete</button></form>
                         </div>
                     </div>

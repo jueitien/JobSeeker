@@ -28,7 +28,7 @@
 
     <section class="profile-hero-card mb-4">
         <div class="profile-identity">
-            <div class="profile-avatar large">@(ViewBag.UserName?.ToString()?.Substring(0,1).ToUpper())</div>
+            <img src="@Url.Action("ProfileImage", "Account")" alt="Profile image" class="profile-avatar large" />
             <div class="flex-grow-1">
                 <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
                     <h1>@ViewBag.UserName</h1>
@@ -132,7 +132,7 @@
                                     <p>@(!string.IsNullOrWhiteSpace(resume.ResumeDescription) ? resume.ResumeDescription : "No description added.")</p>
                                     <small>Uploaded @resume.UploadedAt.ToLocalTime().ToString("dd MMM yyyy")</small>
                                 </div>
-                                <a href="@resume.ResumeS3Key" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary">View document</a>
+                                <a asp-action="ViewResume" asp-route-id="@resume.ResumeId" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary">View document</a>
                             </article>
                         }
                     </div>
@@ -164,7 +164,7 @@
                                     <p>@(!string.IsNullOrWhiteSpace(certification.Description) ? certification.Description : "No description added.")</p>
                                     <small>Uploaded @certification.UploadedAt.ToLocalTime().ToString("dd MMM yyyy")</small>
                                 </div>
-                                <a href="@certification.CertificateS3Key" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary">View document</a>
+                                <a asp-action="ViewCertification" asp-route-id="@certification.CertificationId" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary">View document</a>
                             </article>
                         }
                     </div>

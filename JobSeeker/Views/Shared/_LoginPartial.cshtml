@@ -8,6 +8,9 @@
     var currentUser = await UserManager.GetUserAsync(User);
     var displayName = currentUser?.FullName ?? User.Identity?.Name ?? "Account";
     var displayEmail = currentUser?.Email ?? string.Empty;
+    var avatarUrl = !string.IsNullOrWhiteSpace(currentUser?.ProfileImageS3Key)
+        ? Url.Action("ProfileImage", "Account")
+        : Url.Content("~/images/default-avatar.svg");
 
     <li class="nav-item dropdown account-nav-dropdown">
         <button class="btn account-avatar-button dropdown-toggle"
@@ -15,12 +18,12 @@
                 data-bs-toggle="dropdown"
                 aria-expanded="false"
                 aria-label="Open account menu">
-            <img src="~/images/default-avatar.svg" alt="Profile" class="nav-profile-image" />
+            <img src="@avatarUrl" alt="Profile" class="nav-profile-image" />
         </button>
 
         <div class="dropdown-menu dropdown-menu-end account-dropdown-menu">
             <div class="account-dropdown-header">
-                <img src="~/images/default-avatar.svg" alt="Profile" class="account-dropdown-avatar" />
+                <img src="@avatarUrl" alt="Profile" class="account-dropdown-avatar" />
                 <div class="min-w-0">
                     <strong>@displayName</strong>
                     <small>@displayEmail</small>

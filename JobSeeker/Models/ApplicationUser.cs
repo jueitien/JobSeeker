@@ -9,6 +9,9 @@ namespace JobSeeker.Models
         [StringLength(100)]
         public string FullName { get; set; } = string.Empty;
 
+        [StringLength(1024)]
+        public string? ProfileImageS3Key { get; set; }
+
         public JobSeekerProfile? JobSeekerProfile { get; set; }
 
         public CompanyDetail? CompanyDetail { get; set; }

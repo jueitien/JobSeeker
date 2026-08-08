@@ -25,6 +25,12 @@ namespace JobSeeker.Data
         {
             base.OnModelCreating(modelBuilder);
 
+            modelBuilder.Entity<ApplicationUser>(entity =>
+            {
+                entity.Property(user => user.ProfileImageS3Key)
+                    .HasMaxLength(1024);
+            });
+
             modelBuilder.Entity<JobSeekerProfile>(entity =>
             {
                 entity.ToTable("job_seeker_profiles");

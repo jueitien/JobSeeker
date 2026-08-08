@@ -66,6 +66,10 @@ namespace JobSeeker.Migrations
                     b.Property<string>("PhoneNumber")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("ProfileImageS3Key")
+                        .HasMaxLength(1024)
+                        .HasColumnType("nvarchar(1024)");
+
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
 

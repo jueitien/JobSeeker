@@ -535,3 +535,16 @@ body {
     margin-left: 60px;
   }
 }
+
+
+/* S3-backed profile images */
+img.profile-avatar { object-fit: cover; border: 1px solid var(--portal-border); }
+.account-dropdown-avatar { object-fit: cover; }
+.account-settings-profile-image {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #dce2eb;
+  background: #f6f8fb;
+}
