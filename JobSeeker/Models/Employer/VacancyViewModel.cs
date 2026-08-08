@@ -97,5 +97,11 @@ namespace JobSeeker.Models.Employer
         public string? FilterEmploymentType { get; set; }
         public string? FilterWorkplaceType { get; set; }
         public string? FilterLocation { get; set; }
+
+        /// <summary>
+        /// True when the Employer has saved a CompanyDetail profile, used to
+        /// show a hint that Company Name/Location were auto-filled from it.
+        /// </summary>
+        public bool HasCompanyDetails { get; set; }
     }
 }

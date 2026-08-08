@@ -61,13 +61,25 @@ namespace JobSeeker.Controllers.Employer
                 .OrderByDescending(j => j.CreatedAt)
                 .ToListAsync();
 
+            var company = await _context.CompanyDetails
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.EmployerId == user.Id);
+
             var viewModel = new VacanciesPageViewModel
             {
                 PublishedVacancies = vacancies,
                 SearchKeyword = searchKeyword,
                 FilterEmploymentType = filterEmploymentType,
                 FilterWorkplaceType = filterWorkplaceType,
-                FilterLocation = filterLocation
+                FilterLocation = filterLocation,
+                NewVacancy = new VacancyFormViewModel
+                {
+                    // Auto-fill from the employer's saved company profile, if any.
+                    // Location is capped at 200 chars to match the jobs table column width.
+                    CompanyName = company?.CompanyName ?? string.Empty,
+                    Location = company?.Address is { Length: > 200 } addr ? addr[..200] : company?.Address
+                },
+                HasCompanyDetails = company != null
             };
 
             return View("~/Views/Employer/Vacancies/Index.cshtml", viewModel);
@@ -88,10 +100,15 @@ namespace JobSeeker.Controllers.Employer
                     .OrderByDescending(j => j.CreatedAt)
                     .ToListAsync();
 
+                var hasCompany = await _context.CompanyDetails
+                    .AsNoTracking()
+                    .AnyAsync(c => c.EmployerId == user.Id);
+
                 var viewModel = new VacanciesPageViewModel
                 {
                     NewVacancy = model,
-                    PublishedVacancies = vacancies
+                    PublishedVacancies = vacancies,
+                    HasCompanyDetails = hasCompany
                 };
                 return View("~/Views/Employer/Vacancies/Index.cshtml", viewModel);
             }

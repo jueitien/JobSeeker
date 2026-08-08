@@ -1,0 +1,85 @@
+@model JobSeeker.Models.CompanyDetail
+
+@{
+    ViewData["Title"] = "Manage Company";
+    bool isNew = Model.CompanyDetailId == 0;
+}
+
+<link rel="stylesheet" href="~/css/employer.css" asp-append-version="true" />
+
+<div class="emp-page-header mb-4">
+    <div>
+        <h2 class="mb-1">Manage Company</h2>
+        <p class="text-muted mb-0">
+            Keep your company name and address up to date. These details are used to automatically
+            fill in the "Post a Vacancy" form.
+        </p>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] is string success)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @success
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="row">
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger small"></div>
+
+                <form asp-controller="Company" asp-action="Save" method="post" novalidate>
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="CompanyDetailId" />
+                    <input type="hidden" asp-for="EmployerId" />
+
+                    <div class="mb-3">
+                        <label asp-for="CompanyName" class="form-label"></label>
+                        <input asp-for="CompanyName" class="form-control" placeholder="e.g. Tech Solutions Sdn Bhd" />
+                        <span asp-validation-for="CompanyName" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Address" class="form-label"></label>
+                        <textarea asp-for="Address" class="form-control" rows="3"
+                                  placeholder="e.g. Lot 12, Jalan Bandar, 88000 Kota Kinabalu, Sabah"></textarea>
+                        <span asp-validation-for="Address" class="text-danger small"></span>
+                    </div>
+
+                    @if (!isNew)
+                    {
+                        <p class="text-muted small">Last updated @Model.UpdatedAt.ToString("dd MMM yyyy, h:mm tt")</p>
+                    }
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            @(isNew ? "Save Company Details" : "Update Company Details")
+                        </button>
+                        <a asp-controller="Home" asp-action="Employer" class="btn btn-outline-secondary">Back</a>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm bg-light">
+            <div class="card-body">
+                <h6 class="fw-semibold mb-2">Why add company details?</h6>
+                <p class="text-muted small mb-0">
+                    Once saved, the Company Name and Location fields in the "Post a Vacancy" form will be
+                    automatically filled in for you, so you don't need to retype them for every job posting.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

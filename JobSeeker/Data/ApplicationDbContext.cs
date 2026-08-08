@@ -14,6 +14,7 @@ namespace JobSeeker.Data
         public DbSet<Job> Jobs => Set<Job>();
         public DbSet<JobRequiredSkill> JobRequiredSkills => Set<JobRequiredSkill>();
         public DbSet<JobApplication> JobApplications => Set<JobApplication>();
+        public DbSet<CompanyDetail> CompanyDetails => Set<CompanyDetail>();
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
@@ -197,6 +198,24 @@ namespace JobSeeker.Data
 
                 entity.HasIndex(application => new { application.JobId, application.JobSeekerId }).IsUnique();
                 entity.HasIndex(application => new { application.JobSeekerId, application.ApplicationStatus });
+            });
+
+            modelBuilder.Entity<CompanyDetail>(entity =>
+            {
+                entity.ToTable("company_details");
+                entity.HasKey(company => company.CompanyDetailId);
+                entity.Property(company => company.EmployerId).HasMaxLength(450).IsRequired();
+                entity.Property(company => company.CompanyName).HasMaxLength(200).IsRequired();
+                entity.Property(company => company.Address).HasMaxLength(300).IsRequired();
+                entity.Property(company => company.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.Property(company => company.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                entity.HasOne(company => company.Employer)
+                    .WithOne(user => user.CompanyDetail)
+                    .HasForeignKey<CompanyDetail>(company => company.EmployerId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(company => company.EmployerId).IsUnique();
             });
         }
     }

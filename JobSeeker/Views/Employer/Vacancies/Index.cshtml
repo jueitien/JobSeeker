@@ -266,6 +266,22 @@ else
                         Newly posted vacancies require Administrator approval before they appear to job seekers.
                     </div>
 
+                    @if (Model.HasCompanyDetails)
+                    {
+                        <div class="alert alert-secondary small">
+                            Company Name and Location were auto-filled from your
+                            <a asp-controller="Company" asp-action="Index">company profile</a>. You can still edit them below.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning small">
+                            You haven't set up your company profile yet.
+                            <a asp-controller="Company" asp-action="Index">Add your company details</a>
+                            to auto-fill this form next time.
+                        </div>
+                    }
+
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
                             <label asp-for="NewVacancy.JobTitle" class="form-label"></label>

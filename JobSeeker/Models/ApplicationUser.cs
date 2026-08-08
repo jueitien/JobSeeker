@@ -10,5 +10,7 @@ namespace JobSeeker.Models
         public string FullName { get; set; } = string.Empty;
 
         public JobSeekerProfile? JobSeekerProfile { get; set; }
+
+        public CompanyDetail? CompanyDetail { get; set; }
     }
 }
