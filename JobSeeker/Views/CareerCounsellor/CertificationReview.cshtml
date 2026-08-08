@@ -1,0 +1,542 @@
+﻿@{
+    ViewData["Title"] = "Certification Recommendation Requests";
+}
+
+<head>
+    <link rel="stylesheet" href="~/css/Counsellor.css" />
+</head>
+
+<div class="container py-4">
+    <div class="d-flex flex-wrap justify-content-between
+        align-items-center gap-3 mb-4">
+
+        <div>
+            <h1 class="h3 mb-1">
+                Certification Recommendation Requests
+            </h1>
+
+        </div>
+
+        <div class="d-flex align-items-center gap-2">
+            <button type="button"
+                    class="btn btn-outline-danger"
+                    onclick="resetSampleData()">
+                Reset Sample Data
+            </button>
+
+            <div style="min-width: 150px;">
+                <select id="statusFilter" class="form-select">
+                    <option value="ALL">All</option>
+                    <option value="NEW">New</option>
+                    <option value="IN_PROGRESS">In Progress</option>
+                    <option value="COMPLETED">Completed</option>
+                    <option value="DISMISSED">Dismissed</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div id="messageArea"></div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Job Seeker</th>
+                            <th>Request Message</th>
+                            <th>Certification</th>
+                            <th class="text-center">Priority</th>
+                            <th class="text-center">Date</th>
+                            <th class="text-center">Status</th>
+                            <th class="text-center">Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="requestTableBody"></tbody>
+                </table>
+            </div>
+
+            <div id="emptyMessage"
+                 class="text-center text-muted py-5 d-none">
+                No certification requests were found for the selected status.
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Request Details Modal -->
+<div class="modal fade"
+     id="requestModal"
+     tabindex="-1"
+     aria-labelledby="requestModalLabel"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title fs-5" id="requestModalLabel">
+                    Certification Recommendation Request
+                </h2>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close">
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Job Seeker</dt>
+                    <dd class="col-sm-8" id="modalJobSeeker"></dd>
+
+                    <dt class="col-sm-4">Request Message</dt>
+                    <dd class="col-sm-8" id="modalRequestMessage"></dd>
+
+                    <dt class="col-sm-4">Certification Name</dt>
+                    <dd class="col-sm-8" id="modalCertificationName"></dd>
+
+                    <dt class="col-sm-4">Issuing Organization</dt>
+                    <dd class="col-sm-8" id="modalOrganization"></dd>
+
+                    <dt class="col-sm-4">Recommendation Reason</dt>
+                    <dd class="col-sm-8" id="modalReason"></dd>
+
+                    <dt class="col-sm-4">Priority Level</dt>
+                    <dd class="col-sm-8" id="modalPriority"></dd>
+
+                    <dt class="col-sm-4">Recommendation Source</dt>
+                    <dd class="col-sm-8" id="modalSource"></dd>
+
+                    <dt class="col-sm-4">Status</dt>
+                    <dd class="col-sm-8" id="modalStatus"></dd>
+                </dl>
+
+                <div id="newRequestMessage"
+                     class="alert alert-info mt-3 mb-0">
+                    Accept this task to prepare a certification recommendation,
+                    or decline it to dismiss the request.
+                </div>
+            </div>
+
+            <div class="modal-footer" id="newRequestActions">
+                <button type="button"
+                        class="btn btn-outline-danger"
+                        onclick="declineRequest()">
+                    Decline Task
+                </button>
+
+                <button type="button"
+                        class="btn btn-primary"
+                        onclick="acceptRequest()">
+                    Accept Task
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const requestStorageKey =
+            "certificationRecommendationRequests";
+
+        const draftStorageKey =
+            "certificationRecommendationDrafts";
+
+        const sampleRequests = [
+            {
+                id: 1,
+                jobSeekerId: "fake-user-id-1",
+                counsellorId: null,
+                jobSeeker: "Ali Ahmad",
+                requestMessage:
+                    "Please recommend a certification that can improve my software development career.",
+                certificationName: "",
+                issuingOrganization: "",
+                recommendationReason: "",
+                priorityLevel: "MEDIUM",
+                recommendationSource: "COUNSELLOR",
+                submittedDate: "2026-08-07",
+                updatedDate: "2026-08-07",
+                status: "NEW"
+            },
+            {
+                id: 2,
+                jobSeekerId: "fake-user-id-2",
+                counsellorId: "fake-counsellor-id",
+                jobSeeker: "Siti Aminah",
+                requestMessage:
+                    "I need a certification related to cloud computing and AWS deployment.",
+                certificationName:
+                    "AWS Certified Cloud Practitioner",
+                issuingOrganization:
+                    "Amazon Web Services",
+                recommendationReason:
+                    "This certification introduces essential AWS services, cloud concepts, security and deployment principles.",
+                priorityLevel: "HIGH",
+                recommendationSource: "COUNSELLOR",
+                submittedDate: "2026-08-05",
+                updatedDate: "2026-08-06",
+                status: "IN_PROGRESS"
+            },
+            {
+                id: 3,
+                jobSeekerId: "fake-user-id-3",
+                counsellorId: "fake-counsellor-id",
+                jobSeeker: "John Tan",
+                requestMessage:
+                    "Please recommend a certification for a career in data analytics.",
+                certificationName:
+                    "Microsoft Certified: Power BI Data Analyst Associate",
+                issuingOrganization:
+                    "Microsoft",
+                recommendationReason:
+                    "The certification supports the job seeker's goal of developing practical data preparation, modelling and visualisation skills.",
+                priorityLevel: "MEDIUM",
+                recommendationSource: "COUNSELLOR",
+                submittedDate: "2026-08-03",
+                updatedDate: "2026-08-04",
+                status: "COMPLETED"
+            },
+            {
+                id: 4,
+                jobSeekerId: "fake-user-id-4",
+                counsellorId: null,
+                jobSeeker: "Nur Aisyah",
+                requestMessage:
+                    "I would like a certification recommendation for digital marketing.",
+                certificationName: "",
+                issuingOrganization: "",
+                recommendationReason: "",
+                priorityLevel: "LOW",
+                recommendationSource: "COUNSELLOR",
+                submittedDate: "2026-08-02",
+                updatedDate: "2026-08-02",
+                status: "DISMISSED"
+            }
+        ];
+
+        let requests = [];
+        let selectedRequestId = null;
+        let requestModal = null;
+
+        document.addEventListener("DOMContentLoaded", function() {
+            initialiseRequests();
+
+            requestModal = new bootstrap.Modal(
+                document.getElementById("requestModal")
+            );
+
+            document
+                .getElementById("statusFilter")
+                .addEventListener("change", renderRequests);
+
+            renderRequests();
+        });
+
+        function initialiseRequests() {
+            const storedRequests =
+                localStorage.getItem(requestStorageKey);
+
+            if (storedRequests) {
+                requests = JSON.parse(storedRequests);
+                return;
+            }
+
+            requests = JSON.parse(JSON.stringify(sampleRequests));
+            saveRequests();
+        }
+
+        function saveRequests() {
+            localStorage.setItem(
+                requestStorageKey,
+                JSON.stringify(requests)
+            );
+        }
+
+        function resetSampleData() {
+            localStorage.removeItem(requestStorageKey);
+            localStorage.removeItem(draftStorageKey);
+            location.reload();
+        }
+
+        function renderRequests() {
+            const selectedStatus =
+                document.getElementById("statusFilter").value;
+
+            const tableBody =
+                document.getElementById("requestTableBody");
+
+            const emptyMessage =
+                document.getElementById("emptyMessage");
+
+            const filteredRequests = requests.filter(
+                function(request) {
+                    return selectedStatus === "ALL" ||
+                        request.status === selectedStatus;
+                }
+            );
+
+            tableBody.innerHTML = "";
+
+            if (filteredRequests.length === 0) {
+                emptyMessage.classList.remove("d-none");
+                return;
+            }
+
+            emptyMessage.classList.add("d-none");
+
+            filteredRequests.forEach(function(request) {
+                const row = document.createElement("tr");
+
+                const certificationName =
+                    request.certificationName || "Not prepared";
+
+                row.innerHTML = `
+                            <td class="px-4 py-4">
+                                <div class="fw-semibold">
+                                    ${escapeHtml(request.jobSeeker)}
+                                </div>
+                            </td>
+
+                            <td class="py-4" style="min-width: 280px;">
+                                ${escapeHtml(request.requestMessage)}
+                            </td>
+
+                            <td class="py-4" style="min-width: 220px;">
+                                ${escapeHtml(certificationName)}
+                            </td>
+
+                            <td class="text-center">
+                                ${createPriorityBadge(request.priorityLevel)}
+                            </td>
+
+                            <td class="text-center" style="min-width: 130px;">
+                                ${formatDate(request.submittedDate)}
+                            </td>
+
+                            <td class="text-center">
+                                ${createStatusBadge(request.status)}
+                            </td>
+
+                            <td class="text-center px-4">
+                                ${createActionButton(request)}
+                            </td>
+                        `;
+
+                tableBody.appendChild(row);
+            });
+        }
+
+        function createActionButton(request) {
+            if (request.status === "NEW" ||
+                request.status === "DISMISSED") {
+                return `
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-primary"
+                                    style="width: 85px;"
+                                    onclick="openRequest(${request.id})">
+                                View
+                            </button>
+                        `;
+            }
+
+            const buttonText =
+                request.status === "IN_PROGRESS"
+                    ? "Continue"
+                    : "View";
+
+            return `
+                        <a class="btn btn-sm btn-outline-primary"
+                           style="width: 85px;"
+                           href="/CareerCounsellor/CertificationRecommendations?requestId=${request.id}">
+                            ${buttonText}
+                        </a>
+                    `;
+        }
+
+        function openRequest(requestId) {
+            const request = requests.find(
+                function(item) {
+                    return item.id === requestId;
+                }
+            );
+
+            if (!request) {
+                return;
+            }
+
+            selectedRequestId = requestId;
+
+            document.getElementById(
+                "modalJobSeeker"
+            ).textContent = request.jobSeeker;
+
+            document.getElementById(
+                "modalRequestMessage"
+            ).textContent = request.requestMessage;
+
+            document.getElementById(
+                "modalCertificationName"
+            ).textContent =
+                request.certificationName || "Not prepared";
+
+            document.getElementById(
+                "modalOrganization"
+            ).textContent =
+                request.issuingOrganization || "Not provided";
+
+            document.getElementById(
+                "modalReason"
+            ).textContent =
+                request.recommendationReason || "Not provided";
+
+            document.getElementById(
+                "modalPriority"
+            ).innerHTML =
+                createPriorityBadge(request.priorityLevel);
+
+            document.getElementById(
+                "modalSource"
+            ).textContent =
+                formatSource(request.recommendationSource);
+
+            document.getElementById(
+                "modalStatus"
+            ).innerHTML =
+                createStatusBadge(request.status);
+
+            const actionArea =
+                document.getElementById("newRequestActions");
+
+            const information =
+                document.getElementById("newRequestMessage");
+
+            if (request.status === "NEW") {
+                actionArea.classList.remove("d-none");
+                information.classList.remove("d-none");
+            } else {
+                actionArea.classList.add("d-none");
+                information.classList.add("d-none");
+            }
+
+            requestModal.show();
+        }
+
+        function acceptRequest() {
+            const request = requests.find(
+                function(item) {
+                    return item.id === selectedRequestId;
+                }
+            );
+
+            if (!request || request.status !== "NEW") {
+                return;
+            }
+
+            request.status = "IN_PROGRESS";
+            request.updatedDate =
+                new Date().toISOString().split("T")[0];
+
+            saveRequests();
+
+            window.location.href =
+                "/CareerCounsellor/CertificationRecommendations?requestId=" +
+                request.id;
+        }
+
+        function declineRequest() {
+            const request = requests.find(
+                function(item) {
+                    return item.id === selectedRequestId;
+                }
+            );
+
+            if (!request || request.status !== "NEW") {
+                return;
+            }
+
+            request.status = "DISMISSED";
+            request.updatedDate =
+                new Date().toISOString().split("T")[0];
+
+            saveRequests();
+            requestModal.hide();
+            renderRequests();
+
+            showMessage(
+                "The certification request was declined and changed to Dismissed.",
+                "warning"
+            );
+        }
+
+        function createPriorityBadge(priority) {
+            if (priority === "HIGH") {
+                return `<span class="badge bg-danger d-inline-flex align-items-center justify-content-center">High</span>`;
+            }
+
+            if (priority === "LOW") {
+                return `<span class="badge bg-secondary d-inline-flex align-items-center justify-content-center">Low</span>`;
+            }
+
+            return `<span class="badge bg-warning text-dark d-inline-flex align-items-center justify-content-center">Medium</span>`;
+        }
+
+        function createStatusBadge(status) {
+            if (status === "NEW") {
+                return '<span class="badge badge-new d-inline-flex align-items-center justify-content-center">New</span>';
+            }
+
+            if (status === "IN_PROGRESS") {
+                return '<span class="badge badge-progress d-inline-flex align-items-center justify-content-center">In Progress</span>';
+            }
+
+            if (status === "COMPLETED") {
+                return '<span class="badge badge-completed d-inline-flex align-items-center justify-content-center">Completed</span>';
+            }
+
+            return '<span class="badge badge-dismissed d-inline-flex align-items-center justify-content-center">Dismissed</span>';
+        }
+
+        function showMessage(message, type) {
+            document.getElementById("messageArea").innerHTML = `
+                        <div class="alert alert-${type}
+                                    alert-dismissible fade show">
+                            ${escapeHtml(message)}
+
+                            <button type="button"
+                                    class="btn-close"
+                                    data-bs-dismiss="alert"
+                                    aria-label="Close">
+                            </button>
+                        </div>
+                    `;
+        }
+
+        function formatSource(source) {
+            return source === "COUNSELLOR"
+                ? "Career Counsellor"
+                : "System";
+        }
+
+        function formatDate(dateValue) {
+            return new Date(dateValue).toLocaleDateString(
+                "en-MY",
+                {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric"
+                }
+            );
+        }
+
+        function escapeHtml(value) {
+            const element = document.createElement("div");
+            element.textContent = value ?? "";
+            return element.innerHTML;
+        }
+    </script>
+}

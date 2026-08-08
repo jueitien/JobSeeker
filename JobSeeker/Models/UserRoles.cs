@@ -8,11 +8,11 @@
         public const string Administrator = "Administrator";
 
         public static readonly string[] All =
-        {
+        [
             JobSeeker,
             Employer,
             CareerCounsellor,
             Administrator
-        };
+        ];
     }
 }

@@ -1,0 +1,634 @@
+﻿@{
+    ViewData["Title"] = "Skill Recommendation Review";
+}
+
+<head>
+    <link rel="stylesheet" href="~/css/Counsellor.css" />
+</head>
+
+<div class="container py-4">
+    <div class="d-flex flex-wrap justify-content-between
+        align-items-center gap-3 mb-4">
+
+        <div>
+            <h1 class="h3 mb-1">
+                Skill Recommendation Review
+            </h1>
+
+        </div>
+
+        <div class="d-flex align-items-center gap-2">
+            <button type="button"
+                    class="btn btn-outline-danger"
+                    onclick="resetSampleData()">
+                Reset Sample Data
+            </button>
+
+            <div style="min-width: 140px;">
+                <select id="statusFilter" class="form-select">
+                    <option value="ALL">All</option>
+                    <option value="NEW">New</option>
+                    <option value="IN_PROGRESS">In Progress</option>
+                    <option value="COMPLETED">Completed</option>
+                    <option value="DISMISSED">Dismissed</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div id="messageArea"></div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Job Seeker</th>
+                            <th>Request Message</th>
+                            <th>Recommended Skill</th>
+                            <th class="text-center">Priority</th>
+                            <th class="text-center">Date</th>
+                            <th class="text-center">Status</th>
+                            <th class="text-center px-4">Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="skillReviewTableBody"></tbody>
+                </table>
+            </div>
+
+            <div id="emptyMessage"
+                 class="text-center text-muted py-5 d-none">
+                No skill recommendation records were found.
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade"
+     id="skillReviewModal"
+     tabindex="-1"
+     aria-labelledby="skillReviewModalLabel"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title fs-5"
+                    id="skillReviewModalLabel">
+                    Skill Recommendation Details
+                </h2>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close">
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Job Seeker</dt>
+                    <dd class="col-sm-8"
+                        id="modalJobSeeker">
+                    </dd>
+
+                    <dt class="col-sm-4">Request Message</dt>
+                    <dd class="col-sm-8"
+                        id="modalRequestMessage">
+                    </dd>
+
+                    <dt class="col-sm-4">Recommended Skill</dt>
+                    <dd class="col-sm-8"
+                        id="modalRecommendedSkill">
+                    </dd>
+
+                    <dt class="col-sm-4">Recommendation Reason</dt>
+                    <dd class="col-sm-8"
+                        id="modalRecommendationReason">
+                    </dd>
+
+                    <dt class="col-sm-4">Priority Level</dt>
+                    <dd class="col-sm-8"
+                        id="modalPriority">
+                    </dd>
+
+                    <dt class="col-sm-4">Recommendation Source</dt>
+                    <dd class="col-sm-8"
+                        id="modalSource">
+                    </dd>
+
+                    <dt class="col-sm-4">Submitted Date</dt>
+                    <dd class="col-sm-8"
+                        id="modalDate">
+                    </dd>
+
+                    <dt class="col-sm-4">Status</dt>
+                    <dd class="col-sm-8"
+                        id="modalStatus">
+                    </dd>
+                </dl>
+
+                <div id="newRequestInstruction"
+                     class="alert alert-info mt-3 mb-0">
+                    Accept this task to prepare a skill recommendation,
+                    or decline it to dismiss the request.
+                </div>
+            </div>
+
+            <div class="modal-footer"
+                 id="newRequestActions">
+
+                <button type="button"
+                        class="btn btn-outline-danger"
+                        onclick="declineRequest()">
+                    Decline Task
+                </button>
+
+                <button type="button"
+                        class="btn btn-primary"
+                        onclick="acceptRequest()">
+                    Accept Task
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const storageKey = "skillRecommendationRecords";
+
+        const sampleRecords = [
+            {
+                skillRecommendationId: 1,
+                jobSeekerId: 101,
+                counsellorId: null,
+                jobSeeker: "Ali Ahmad",
+
+                requestMessage:
+                    "Please recommend the technical skills that I should develop for a software developer position.",
+
+                recommendedSkill: "",
+                recommendationReason: "",
+                priorityLevel: "HIGH",
+                recommendationSource: "COUNSELLOR",
+                recommendationStatus: "NEW",
+                createdAt: "2026-08-07T09:30:00",
+                updatedAt: "2026-08-07T09:30:00"
+            },
+            {
+                skillRecommendationId: 2,
+                jobSeekerId: 102,
+                counsellorId: 201,
+                jobSeeker: "Siti Aminah",
+
+                requestMessage:
+                    "I would like a skill recommendation for starting a career in cloud computing.",
+
+                recommendedSkill:
+                    "AWS Cloud Fundamentals",
+
+                recommendationReason:
+                    "This skill provides fundamental knowledge of cloud services and AWS deployment.",
+
+                priorityLevel: "HIGH",
+                recommendationSource: "COUNSELLOR",
+                recommendationStatus: "IN_PROGRESS",
+                createdAt: "2026-08-05T11:00:00",
+                updatedAt: "2026-08-06T10:00:00"
+            },
+            {
+                skillRecommendationId: 3,
+                jobSeekerId: 103,
+                counsellorId: 201,
+                jobSeeker: "John Tan",
+
+                requestMessage:
+                    "Please recommend an additional skill for a data analyst position.",
+
+                recommendedSkill:
+                    "Microsoft Power BI",
+
+                recommendationReason:
+                    "Power BI helps the job seeker analyse data and create interactive business reports.",
+
+                priorityLevel: "MEDIUM",
+                recommendationSource: "COUNSELLOR",
+                recommendationStatus: "COMPLETED",
+                createdAt: "2026-08-03T10:00:00",
+                updatedAt: "2026-08-04T15:00:00"
+            },
+            {
+                skillRecommendationId: 4,
+                jobSeekerId: 104,
+                counsellorId: null,
+                jobSeeker: "Nur Aisyah",
+
+                requestMessage:
+                    "Please recommend a useful skill for a digital marketing career.",
+
+                recommendedSkill: "",
+                recommendationReason: "",
+                priorityLevel: "LOW",
+                recommendationSource: "COUNSELLOR",
+                recommendationStatus: "DISMISSED",
+                createdAt: "2026-08-02T14:00:00",
+                updatedAt: "2026-08-02T16:00:00"
+            }
+        ];
+
+        let skillRecords = [];
+        let selectedSkillRecommendationId = null;
+        let skillReviewModal = null;
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            function() {
+                initialiseSampleData();
+
+                skillReviewModal = new bootstrap.Modal(
+                    document.getElementById("skillReviewModal")
+                );
+
+                document
+                    .getElementById("statusFilter")
+                    .addEventListener(
+                        "change",
+                        renderSkillRecords
+                    );
+
+                renderSkillRecords();
+            }
+        );
+
+        function initialiseSampleData() {
+            const storedData =
+                localStorage.getItem(storageKey);
+
+            if (storedData) {
+                skillRecords = JSON.parse(storedData);
+                return;
+            }
+
+            skillRecords = JSON.parse(
+                JSON.stringify(sampleRecords)
+            );
+
+            saveSkillRecords();
+        }
+
+        function saveSkillRecords() {
+            localStorage.setItem(
+                storageKey,
+                JSON.stringify(skillRecords)
+            );
+        }
+
+        function resetSampleData() {
+            localStorage.removeItem(storageKey);
+            location.reload();
+        }
+
+        function renderSkillRecords() {
+            const selectedStatus =
+                document.getElementById(
+                    "statusFilter"
+                ).value;
+
+            const tableBody =
+                document.getElementById(
+                    "skillReviewTableBody"
+                );
+
+            const emptyMessage =
+                document.getElementById(
+                    "emptyMessage"
+                );
+
+            const filteredRecords =
+                skillRecords.filter(
+                    function(record) {
+                        return selectedStatus === "ALL" ||
+                            record.recommendationStatus ===
+                            selectedStatus;
+                    }
+                );
+
+            tableBody.innerHTML = "";
+
+            if (filteredRecords.length === 0) {
+                emptyMessage.classList.remove("d-none");
+                return;
+            }
+
+            emptyMessage.classList.add("d-none");
+
+            filteredRecords.forEach(
+                function(record) {
+                    const row =
+                        document.createElement("tr");
+
+                    row.innerHTML = `
+                                <td class="px-4 py-4">
+                                    <div class="fw-semibold">
+                                        ${escapeHtml(record.jobSeeker)}
+                                    </div>
+                                </td>
+
+                                <td class="py-4"
+                                    style="min-width: 280px;">
+                                    ${escapeHtml(record.requestMessage)}
+                                </td>
+
+                                <td class="py-4"
+                                    style="min-width: 190px;">
+                                    ${createSkillDisplay(
+                        record.recommendedSkill
+                    )}
+                                </td>
+
+                                <td class="text-center">
+                                    ${createPriorityBadge(
+                        record.priorityLevel
+                    )}
+                                </td>
+
+                                <td class="text-center"
+                                    style="min-width: 130px;">
+                                    ${formatDate(record.createdAt)}
+                                </td>
+
+                                <td class="text-center">
+                                    ${createStatusBadge(
+                        record.recommendationStatus
+                    )}
+                                </td>
+
+                                <td class="text-center px-4">
+                                    ${createActionButton(record)}
+                                </td>
+                            `;
+
+                    tableBody.appendChild(row);
+                }
+            );
+        }
+
+        function createSkillDisplay(skill) {
+            if (!skill) {
+                return `
+                            <span class="text-muted">
+                                Not prepared
+                            </span>
+                        `;
+            }
+
+            return `
+                        <span class="badge bg-light text-dark border">
+                            ${escapeHtml(skill)}
+                        </span>
+                    `;
+        }
+
+        function createActionButton(record) {
+            if (record.recommendationStatus === "NEW" ||
+                record.recommendationStatus === "DISMISSED") {
+
+                return `
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-primary"
+                                    style="width: 90px;"
+                                    onclick="openSkillReview(
+                                        ${record.skillRecommendationId}
+                                    )">
+                                View
+                            </button>
+                        `;
+            }
+
+            const buttonText =
+                record.recommendationStatus === "IN_PROGRESS"
+                    ? "Continue"
+                    : "View";
+
+            return `
+                        <a class="btn btn-sm btn-outline-primary"
+                           style="width: 90px;"
+                                   href="/CareerCounsellor/SkillRecommendations?requestId=${record.skillRecommendationId}">
+                            ${buttonText}
+                        </a>
+                    `;
+        }
+
+        function openSkillReview(skillRecommendationId) {
+            const record = skillRecords.find(
+                function(item) {
+                    return item.skillRecommendationId ===
+                        skillRecommendationId;
+                }
+            );
+
+            if (!record) {
+                return;
+            }
+
+            selectedSkillRecommendationId =
+                skillRecommendationId;
+
+            document.getElementById(
+                "modalJobSeeker"
+            ).textContent = record.jobSeeker;
+
+            document.getElementById(
+                "modalRequestMessage"
+            ).textContent = record.requestMessage;
+
+            document.getElementById(
+                "modalRecommendedSkill"
+            ).innerHTML = createSkillDisplay(
+                record.recommendedSkill
+            );
+
+            document.getElementById(
+                "modalRecommendationReason"
+            ).textContent =
+                record.recommendationReason ||
+                "Not provided";
+
+            document.getElementById(
+                "modalPriority"
+            ).innerHTML = createPriorityBadge(
+                record.priorityLevel
+            );
+
+            document.getElementById(
+                "modalSource"
+            ).textContent = formatSource(
+                record.recommendationSource
+            );
+
+            document.getElementById(
+                "modalDate"
+            ).textContent = formatDate(
+                record.createdAt
+            );
+
+            document.getElementById(
+                "modalStatus"
+            ).innerHTML = createStatusBadge(
+                record.recommendationStatus
+            );
+
+            const actionArea =
+                document.getElementById(
+                    "newRequestActions"
+                );
+
+            const instruction =
+                document.getElementById(
+                    "newRequestInstruction"
+                );
+
+            if (record.recommendationStatus === "NEW") {
+                actionArea.classList.remove("d-none");
+                instruction.classList.remove("d-none");
+            } else {
+                actionArea.classList.add("d-none");
+                instruction.classList.add("d-none");
+            }
+
+            skillReviewModal.show();
+        }
+
+        function acceptRequest() {
+            const record = skillRecords.find(
+                function(item) {
+                    return item.skillRecommendationId ===
+                        selectedSkillRecommendationId;
+                }
+            );
+
+            if (!record ||
+                record.recommendationStatus !== "NEW") {
+                return;
+            }
+
+            record.counsellorId = 201;
+            record.recommendationStatus = "IN_PROGRESS";
+            record.updatedAt = new Date().toISOString();
+
+            saveSkillRecords();
+
+            window.location.href =
+                "/CareerCounsellor/SkillRecommendations" +
+                "?requestId=" +
+                record.skillRecommendationId;
+        }
+
+        function declineRequest() {
+            const record = skillRecords.find(
+                function(item) {
+                    return item.skillRecommendationId ===
+                        selectedSkillRecommendationId;
+                }
+            );
+
+            if (!record ||
+                record.recommendationStatus !== "NEW") {
+                return;
+            }
+
+            record.recommendationStatus = "DISMISSED";
+            record.updatedAt = new Date().toISOString();
+
+            saveSkillRecords();
+            skillReviewModal.hide();
+            renderSkillRecords();
+
+            showMessage(
+                "The skill recommendation request was dismissed.",
+                "warning"
+            );
+        }
+
+        function createPriorityBadge(priority) {
+            if (priority === "HIGH") {
+                return `<span class="badge bg-danger d-inline-flex align-items-center justify-content-center">High</span>`;
+            }
+
+            if (priority === "LOW") {
+                return `<span class="badge bg-secondary d-inline-flex align-items-center justify-content-center">Low</span>`;
+            }
+
+            return `<span class="badge bg-warning text-dark d-inline-flex align-items-center justify-content-center">Medium</span>`;
+        }
+
+        function createStatusBadge(status) {
+            if (status === "NEW") {
+                return '<span class="badge badge-new d-inline-flex align-items-center justify-content-center">New</span>';
+            }
+
+            if (status === "IN_PROGRESS") {
+                return '<span class="badge badge-progress d-inline-flex align-items-center justify-content-center">In Progress</span>';
+            }
+
+            if (status === "COMPLETED") {
+                return '<span class="badge badge-completed d-inline-flex align-items-center justify-content-center">Completed</span>';
+            }
+
+            return '<span class="badge badge-dismissed d-inline-flex align-items-center justify-content-center">Dismissed</span>';
+        }
+
+        function formatSource(source) {
+            if (source === "COUNSELLOR") {
+                return "Career Counsellor";
+            }
+
+            return "System";
+        }
+
+        function formatDate(dateValue) {
+            if (!dateValue) {
+                return "Not available";
+            }
+
+            return new Date(dateValue)
+                .toLocaleDateString(
+                    "en-MY",
+                    {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric"
+                    }
+                );
+        }
+
+        function showMessage(message, type) {
+            document.getElementById(
+                "messageArea"
+            ).innerHTML = `
+                        <div class="alert alert-${type}
+                                    alert-dismissible fade show">
+                            ${escapeHtml(message)}
+
+                            <button type="button"
+                                    class="btn-close"
+                                    data-bs-dismiss="alert"
+                                    aria-label="Close">
+                            </button>
+                        </div>
+                    `;
+        }
+
+        function escapeHtml(value) {
+            const element =
+                document.createElement("div");
+
+            element.textContent = value ?? "";
+
+            return element.innerHTML;
+        }
+    </script>
+}
