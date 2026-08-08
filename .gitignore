@@ -33,3 +33,6 @@ example/
 JobSeeker/wwwroot/uploads/
 
 JOB_SEEKER_TESTING.md
+
+# Kiro IDE files
+.kiro/
