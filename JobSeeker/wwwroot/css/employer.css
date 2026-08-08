@@ -78,6 +78,23 @@
     margin-bottom: 0.15rem;
 }
 
+/* ── Location line under the job title (wraps to next line instead of overflowing) ── */
+.vac-location-text {
+    display: flex;
+    align-items: flex-start;
+    word-break: break-word;
+    overflow-wrap: break-word;
+}
+
+/* ── Long description / responsibilities text should wrap across multiple lines ── */
+#detailDescription,
+#detailRequirements,
+.vac-desc-clamp {
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: break-word;
+}
+
 .input-group .form-control:focus {
     box-shadow: none;
     border-color: #86b7fe;

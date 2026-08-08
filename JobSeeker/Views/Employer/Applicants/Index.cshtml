@@ -1,0 +1,301 @@
+@model JobSeeker.Models.Employer.ApplicantsPageViewModel
+
+@{
+    ViewData["Title"] = "Applicants";
+    var statuses = new[] { "SUBMITTED", "UNDER_REVIEW", "SHORTLISTED", "INTERVIEW", "OFFERED", "HIRED", "REJECTED", "WITHDRAWN" };
+}
+
+<link rel="stylesheet" href="~/css/employer.css" asp-append-version="true" />
+
+@* ── Page Header ── *@
+<div class="emp-page-header mb-4">
+    <h2 class="mb-1">Applicants</h2>
+    <p class="text-muted mb-0">Review and manage job seekers who applied to your vacancies.</p>
+</div>
+
+@* ── Alerts ── *@
+@if (TempData["SuccessMessage"] is string success)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @success
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["ErrorMessage"] is string error)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @error
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@* ── Search & Filter Bar ── *@
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <form asp-controller="Applicants" asp-action="Index" method="get" id="filterForm">
+            <div class="row g-2 align-items-end">
+
+                <div class="col-md-4">
+                    <label class="form-label small text-muted mb-1">Search</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none"
+                                 viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M21 21l-4.35-4.35M17 11A6 6 0 105 11a6 6 0 0012 0z" />
+                            </svg>
+                        </span>
+                        <input type="text" name="searchKeyword" class="form-control border-start-0"
+                               placeholder="Applicant name, job title, or resume…"
+                               value="@Model.SearchKeyword" />
+                    </div>
+                </div>
+
+                <div class="col-sm-6 col-md-3">
+                    <label class="form-label small text-muted mb-1">Job Vacancy</label>
+                    <select name="filterJobId" class="form-select">
+                        <option value="">All Vacancies</option>
+                        @foreach (var job in Model.EmployerJobs)
+                        {
+                            <option value="@job.JobId" selected="@(Model.FilterJobId == job.JobId)">@job.JobTitle</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-sm-6 col-md-2">
+                    <label class="form-label small text-muted mb-1">Status</label>
+                    <select name="filterStatus" class="form-select">
+                        <option value="All" selected="@(string.IsNullOrEmpty(Model.FilterStatus) || Model.FilterStatus == "All")">All Status</option>
+                        @foreach (var status in statuses)
+                        {
+                            <option value="@status" selected="@(Model.FilterStatus == status)">@Friendly(status)</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-sm-6 col-md-2">
+                    <label class="form-label small text-muted mb-1">Sort By</label>
+                    <select name="sortBy" class="form-select">
+                        <option value="newest" selected="@(string.IsNullOrEmpty(Model.SortBy) || Model.SortBy == "newest")">Newest First</option>
+                        <option value="oldest" selected="@(Model.SortBy == "oldest")">Oldest First</option>
+                        <option value="match" selected="@(Model.SortBy == "match")">Best Match</option>
+                        <option value="name" selected="@(Model.SortBy == "name")">Applicant Name</option>
+                    </select>
+                </div>
+
+                <div class="col-md-1 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-grow-1" title="Filter">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none"
+                             viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M5 12h14M12 5l7 7-7 7" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="col-12">
+                    <a asp-controller="Applicants" asp-action="Index" class="btn btn-outline-secondary btn-sm">Clear filters</a>
+                </div>
+
+            </div>
+        </form>
+    </div>
+</div>
+
+@* ── Results Count ── *@
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <span class="text-muted small">
+        Showing <strong>@Model.Applications.Count</strong> applicant@(Model.Applications.Count == 1 ? "" : "s")
+        @if (!string.IsNullOrWhiteSpace(Model.SearchKeyword))
+        {
+            <text> for "<em>@Model.SearchKeyword</em>"</text>
+        }
+    </span>
+</div>
+
+@* ── Applicants List ── *@
+@if (!Model.Applications.Any())
+{
+    <div class="text-center py-5">
+        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="none"
+             viewBox="0 0 24 24" stroke="currentColor" class="text-muted mb-3" style="opacity:.35">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                  d="M17 20h5v-2a4 4 0 00-5-3.87M9 20H4v-2a4 4 0 015-3.87m6-4a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+        <h5 class="text-muted">No applicants found</h5>
+        <p class="text-muted small">
+            @if (!Model.EmployerJobs.Any())
+            {
+                <text>Post a vacancy first to start receiving applications.</text>
+            }
+            else
+            {
+                <text>Try adjusting your search or filters.</text>
+            }
+        </p>
+    </div>
+}
+else
+{
+    <div class="d-flex flex-column gap-3">
+        @foreach (var app in Model.Applications)
+        {
+            var applicantName = app.JobSeekerProfile?.User?.FullName ?? "Unknown Applicant";
+            var statusBadgeClass = app.ApplicationStatus switch
+            {
+                "HIRED" => "bg-success",
+                "OFFERED" => "bg-info text-dark",
+                "SHORTLISTED" or "INTERVIEW" => "bg-primary",
+                "REJECTED" or "WITHDRAWN" => "bg-danger",
+                "UNDER_REVIEW" => "bg-warning text-dark",
+                _ => "bg-secondary"
+            };
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+                        <div class="d-flex align-items-start gap-3">
+                            <div class="vac-company-logo">@applicantName.Substring(0, 1).ToUpper()</div>
+                            <div>
+                                <h5 class="mb-0 fw-semibold">@applicantName</h5>
+                                <p class="text-muted small mb-0">
+                                    Applied for <strong>@app.Job.JobTitle</strong>
+                                </p>
+                            </div>
+                        </div>
+                        <span class="badge @statusBadgeClass">@Friendly(app.ApplicationStatus)</span>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-sm-4 col-lg-2">
+                            <span class="vac-detail-label">Applied On</span>
+                            <div class="small">@app.AppliedAt.ToLocalTime().ToString("dd MMM yyyy")</div>
+                        </div>
+                        <div class="col-sm-4 col-lg-2">
+                            <span class="vac-detail-label">Match Score</span>
+                            <div class="small">@(app.MatchPercentageAtApplication?.ToString("0") ?? "-")%</div>
+                        </div>
+                        <div class="col-sm-4 col-lg-3">
+                            <span class="vac-detail-label">Resume</span>
+                            <div class="small">
+                                @if (!string.IsNullOrWhiteSpace(app.Resume?.ResumeS3Key))
+                                {
+                                    <a href="@app.Resume.ResumeS3Key" target="_blank" rel="noopener">
+                                        @(app.Resume.ResumeTitle ?? "View resume")
+                                    </a>
+                                }
+                                else
+                                {
+                                    <text>Not provided</text>
+                                }
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-lg-2">
+                            <span class="vac-detail-label">Job Type</span>
+                            <div class="small">@Friendly(app.Job.EmploymentType)</div>
+                        </div>
+                        <div class="col-sm-6 col-lg-3">
+                            <span class="vac-detail-label">Location</span>
+                            <div class="small">@(app.Job.Location ?? "Not specified")</div>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(app.CoverLetter))
+                    {
+                        <div class="mb-3">
+                            <span class="vac-detail-label">Cover Letter</span>
+                            <p class="small text-muted mb-0 vac-desc-clamp">@app.CoverLetter</p>
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(app.EmployerNotes))
+                    {
+                        <div class="alert alert-secondary small mb-3">
+                            <strong>Your note:</strong> @app.EmployerNotes
+                        </div>
+                    }
+
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="button" class="btn btn-outline-primary btn-sm"
+                                data-bs-toggle="modal"
+                                data-bs-target="#updateStatusModal"
+                                data-application-id="@app.ApplicationId"
+                                data-applicant-name="@applicantName"
+                                data-job-title="@app.Job.JobTitle"
+                                data-current-status="@app.ApplicationStatus"
+                                data-current-notes="@app.EmployerNotes">
+                            Update Status
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+
+@* ── Modal: Update Applicant Status ── *@
+<div class="modal fade" id="updateStatusModal" tabindex="-1"
+     aria-labelledby="updateStatusModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="updateStatusModalLabel">Update Application Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-controller="Applicants" asp-action="UpdateStatus" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" id="statusApplicationId" />
+                <div class="modal-body">
+                    <p class="text-muted small mb-3">
+                        Updating status for <strong id="statusApplicantName">—</strong>
+                        applying to <strong id="statusJobTitle">—</strong>.
+                    </p>
+
+                    <div class="mb-3">
+                        <label class="form-label">Status</label>
+                        <select name="status" id="statusSelect" class="form-select">
+                            @foreach (var status in statuses)
+                            {
+                                <option value="@status">@Friendly(status)</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Note to applicant <span class="text-muted">(optional)</span></label>
+                        <textarea name="employerNotes" id="statusNotes" class="form-control" rows="3"
+                                  placeholder="e.g. Interview scheduled for next Monday…"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Status</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('updateStatusModal')?.addEventListener('show.bs.modal', function (event) {
+            var btn = event.relatedTarget;
+            if (!btn) return;
+            document.getElementById('statusApplicationId').value = btn.getAttribute('data-application-id') || '';
+            document.getElementById('statusApplicantName').textContent = btn.getAttribute('data-applicant-name') || '—';
+            document.getElementById('statusJobTitle').textContent = btn.getAttribute('data-job-title') || '—';
+            document.getElementById('statusSelect').value = btn.getAttribute('data-current-status') || 'SUBMITTED';
+            document.getElementById('statusNotes').value = btn.getAttribute('data-current-notes') || '';
+        });
+    </script>
+}
+
+@functions {
+    private static string Friendly(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return "";
+        var words = value.Replace("_", " ").ToLowerInvariant();
+        return System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(words);
+    }
+}

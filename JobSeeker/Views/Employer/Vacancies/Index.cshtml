@@ -162,11 +162,21 @@ else
                             @job.CompanyName
                         </p>
 
+                        @if (!string.IsNullOrWhiteSpace(job.Location))
+                        {
+                            <p class="vac-location-text text-muted small mb-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none"
+                                     viewBox="0 0 24 24" stroke="currentColor" class="me-1 flex-shrink-0">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                @job.Location
+                            </p>
+                        }
+
                         <div class="d-flex flex-wrap gap-1 mb-3">
-                            @if (!string.IsNullOrWhiteSpace(job.Location))
-                            {
-                                <span class="vac-chip">@job.Location</span>
-                            }
                             @if (!string.IsNullOrWhiteSpace(job.WorkplaceType))
                             {
                                 <span class="vac-chip">@Friendly(job.WorkplaceType)</span>
