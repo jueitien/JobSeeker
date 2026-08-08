@@ -56,6 +56,13 @@ namespace JobSeeker.Models
         [StringLength(30)]
         public string JobStatus { get; set; } = "OPEN";
 
+        public string? RejectionReason { get; set; }
+
+        [StringLength(450)]
+        public string? ApprovedBy { get; set; }
+
+        public DateTime? ApprovedAt { get; set; }
+
         public bool IsTestData { get; set; }
 
         public DateTime CreatedAt { get; set; }
@@ -63,6 +70,8 @@ namespace JobSeeker.Models
         public DateTime UpdatedAt { get; set; }
 
         public ApplicationUser? Employer { get; set; }
+
+        public ApplicationUser? Approver { get; set; }
 
         public ICollection<JobRequiredSkill> RequiredSkills { get; set; } = new List<JobRequiredSkill>();
 

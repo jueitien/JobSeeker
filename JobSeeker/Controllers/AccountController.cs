@@ -32,7 +32,7 @@ namespace JobSeeker.Controllers
         public async Task<IActionResult> Register(
             RegisterModel model)
         {
-            if (!UserRoles.All.Contains(model.Role))
+            if (!UserRoles.Registerable.Contains(model.Role))
             {
                 ModelState.AddModelError(
                     nameof(model.Role),

@@ -10,7 +10,11 @@ var connectionString =
         "DefaultConnection was not found.");
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
+{
+    options.UseSqlServer(connectionString);
+    options.ConfigureWarnings(w =>
+        w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+});
 
 builder.Services
     .AddIdentity<ApplicationUser, IdentityRole>(options =>
@@ -81,6 +85,9 @@ using (var scope = app.Services.CreateScope())
         await dbContext.Database.MigrateAsync();
 
         await IdentitySeeder.SeedRolesAsync(
+            scope.ServiceProvider);
+
+        await IdentitySeeder.SeedAdminUserAsync(
             scope.ServiceProvider);
     }
     catch (Exception ex)
