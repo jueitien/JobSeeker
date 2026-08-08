@@ -258,31 +258,7 @@
                     </ul>
 
                     <ul class="navbar-nav ms-auto">
-<<<<<<< HEAD
                         <partial name="_LoginPartial" />
-=======
-                        @if (User.Identity?.IsAuthenticated == true)
-                        {
-                            <li class="nav-item">
-                                <span class="nav-link text-muted">
-                                    @User.Identity.Name
-                                </span>
-                            </li>
-
-                            <li class="nav-item">
-                                <form asp-controller="Account"
-                                      asp-action="Logout"
-                                      method="post">
-                                    <button type="submit"
-                                            class="nav-link btn btn-link text-dark border-0">
-                                        Logout
-                                    </button>
-                                </form>
-                            </li>
-
-
-                        }
->>>>>>> fdeed17 (counsellor function done)
                     </ul>
                 </div>
             </div>
