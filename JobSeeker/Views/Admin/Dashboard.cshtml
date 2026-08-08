@@ -1,3 +1,4 @@
+@model JobSeeker.Models.ViewModels.Admin.DashboardViewModel
 @{
     ViewData["Title"] = "Admin Dashboard";
 }
@@ -13,13 +14,13 @@
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body d-flex align-items-center gap-3">
                 <div class="bg-primary bg-opacity-10 rounded p-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="text-primary" style="color:#0d6efd">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="color:#0d6efd">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-5-3.87M9 20H4v-2a4 4 0 015-3.87m6-4a4 4 0 11-8 0 4 4 0 018 0z"/>
                     </svg>
                 </div>
                 <div>
                     <div class="text-muted small">Total Users</div>
-                    <div class="fs-4 fw-bold">—</div>
+                    <div class="fs-4 fw-bold">@Model.TotalUsers</div>
                 </div>
             </div>
         </div>
@@ -35,7 +36,7 @@
                 </div>
                 <div>
                     <div class="text-muted small">Pending Employer Verifications</div>
-                    <div class="fs-4 fw-bold">—</div>
+                    <div class="fs-4 fw-bold">@Model.PendingEmployerVerifications</div>
                 </div>
             </div>
         </div>
@@ -51,7 +52,7 @@
                 </div>
                 <div>
                     <div class="text-muted small">Pending Job Approvals</div>
-                    <div class="fs-4 fw-bold">—</div>
+                    <div class="fs-4 fw-bold">@Model.PendingJobApprovals</div>
                 </div>
             </div>
         </div>
@@ -67,33 +68,37 @@
                 </div>
                 <div>
                     <div class="text-muted small">Suspended Accounts</div>
-                    <div class="fs-4 fw-bold">—</div>
+                    <div class="fs-4 fw-bold">@Model.SuspendedAccounts</div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Quick Actions -->
+<!-- Quick Actions + Recent Activity -->
 <div class="row g-3">
     <div class="col-md-6">
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white fw-semibold">Quick Actions</div>
             <div class="card-body d-flex flex-column gap-2">
-                <a asp-controller="EmployerVerification" asp-action="Pending"
-                   class="btn btn-outline-warning text-start">
+                <a asp-controller="EmployerVerification" asp-action="Pending" class="btn btn-outline-warning text-start">
                     Review Pending Employer Verifications
+                    @if (Model.PendingEmployerVerifications > 0)
+                    {
+                        <span class="badge bg-warning text-dark ms-2">@Model.PendingEmployerVerifications</span>
+                    }
                 </a>
-                <a asp-controller="JobApproval" asp-action="Pending"
-                   class="btn btn-outline-success text-start">
+                <a asp-controller="JobApproval" asp-action="Pending" class="btn btn-outline-success text-start">
                     Review Pending Job Postings
+                    @if (Model.PendingJobApprovals > 0)
+                    {
+                        <span class="badge bg-success ms-2">@Model.PendingJobApprovals</span>
+                    }
                 </a>
-                <a asp-controller="UserManagement" asp-action="Index"
-                   class="btn btn-outline-primary text-start">
+                <a asp-controller="UserManagement" asp-action="Index" class="btn btn-outline-primary text-start">
                     Manage Users
                 </a>
-                <a asp-controller="Reports" asp-action="Index"
-                   class="btn btn-outline-secondary text-start">
+                <a asp-controller="Reports" asp-action="Index" class="btn btn-outline-secondary text-start">
                     Generate Report
                 </a>
             </div>
@@ -103,8 +108,34 @@
     <div class="col-md-6">
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white fw-semibold">Recent Activity</div>
-            <div class="card-body">
-                <p class="text-muted text-center py-4">No recent activity to display.</p>
+            <div class="card-body p-0">
+                @if (!Model.RecentActivities.Any())
+                {
+                    <p class="text-muted text-center py-4 px-3">No recent activity to display.</p>
+                }
+                else
+                {
+                    <ul class="list-group list-group-flush">
+                        @foreach (var activity in Model.RecentActivities)
+                        {
+                            <li class="list-group-item border-0 px-3 py-2">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <span class="badge bg-secondary me-1">@activity.ActionType</span>
+                                        <span class="small">@activity.Description</span>
+                                    </div>
+                                    <small class="text-muted text-nowrap ms-2">
+                                        @activity.CreatedAt.ToString("dd MMM HH:mm")
+                                    </small>
+                                </div>
+                                @if (!string.IsNullOrEmpty(activity.PerformedBy))
+                                {
+                                    <div class="small text-muted mt-1">by @activity.PerformedBy</div>
+                                }
+                            </li>
+                        }
+                    </ul>
+                }
             </div>
         </div>
     </div>
