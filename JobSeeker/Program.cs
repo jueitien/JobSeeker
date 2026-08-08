@@ -89,6 +89,13 @@ using (var scope = app.Services.CreateScope())
 
         await IdentitySeeder.SeedAdminUserAsync(
             scope.ServiceProvider);
+
+        // Seed fake data in development only for admin panel testing
+        if (app.Environment.IsDevelopment())
+        {
+            await IdentitySeeder.SeedFakeAdminDataAsync(
+                scope.ServiceProvider);
+        }
     }
     catch (Exception ex)
     {
