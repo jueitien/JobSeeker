@@ -63,6 +63,16 @@
                 Account Settings
             </a>
 
+            @if (User.IsInRole(UserRoles.Employer))
+            {
+                <a class="dropdown-item account-dropdown-item"
+                   asp-controller="Company"
+                   asp-action="Index">
+                    <span class="account-menu-icon">🏢</span>
+                    Manage Company
+                </a>
+            }
+
             <div class="dropdown-divider"></div>
 
             <form asp-controller="Account"
