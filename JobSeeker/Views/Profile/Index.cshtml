@@ -36,8 +36,8 @@
                 </div>
                 <p class="profile-headline">@(profile?.PreferredJobTitle ?? "Add your preferred job title")</p>
                 <div class="profile-meta">
-                    <span>⌖ @(profile?.PreferredLocation ?? "Add preferred location")</span>
-                    <span>✉ @ViewBag.Email</span>
+                    <span>Location: @(profile?.PreferredLocation ?? "Add preferred location")</span>
+                    <span>Email: @ViewBag.Email</span>
                 </div>
             </div>
             <a asp-action="Edit" class="btn btn-primary px-4">Edit profile</a>

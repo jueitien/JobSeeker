@@ -145,56 +145,10 @@ namespace JobSeeker.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // Assignment testing helper. Only works for the generated sample jobs.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AdvanceTestStatus(long id)
-        {
-            var user = await GetCurrentUserAsync();
-            var application = await _context.JobApplications
-                .Include(x => x.Job)
-                .FirstOrDefaultAsync(x => x.ApplicationId == id && x.JobSeekerId == user.Id);
-
-            if (application == null)
-                return NotFound();
-
-            if (!application.Job.IsTestData)
-                return Forbid();
-
-            var statuses = new[]
-            {
-                "SUBMITTED",
-                "UNDER_REVIEW",
-                "SHORTLISTED",
-                "INTERVIEW",
-                "OFFERED",
-                "HIRED"
-            };
-
-            var currentIndex = Array.IndexOf(statuses, application.ApplicationStatus);
-            if (currentIndex < 0 || currentIndex >= statuses.Length - 1)
-            {
-                TempData["InfoMessage"] = "The sample application is already at its final test status.";
-                return RedirectToAction(nameof(Index));
-            }
-
-            application.ApplicationStatus = statuses[currentIndex + 1];
-            application.UpdatedAt = DateTime.UtcNow;
-            await _context.SaveChangesAsync();
-
-            TempData["SuccessMessage"] = $"Test status changed to {FormatStatus(application.ApplicationStatus)}.";
-            return RedirectToAction(nameof(Index));
-        }
-
         private async Task<ApplicationUser> GetCurrentUserAsync()
         {
             return await _userManager.GetUserAsync(User)
                 ?? throw new InvalidOperationException("The current user could not be loaded.");
-        }
-
-        private static string FormatStatus(string value)
-        {
-            return string.Join(" ", value.Split('_')).ToLowerInvariant();
         }
     }
 }

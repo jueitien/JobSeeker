@@ -232,7 +232,7 @@ namespace JobSeeker.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to upload resume to Amazon S3 for user {UserId}.", user.Id);
-                TempData["ErrorMessage"] = "Resume upload to S3 failed. Check the bucket name, Region and current Learner Lab credentials.";
+                TempData["ErrorMessage"] = "Resume upload failed. Please try again.";
                 return RedirectToAction(nameof(Edit));
             }
 
@@ -319,7 +319,7 @@ namespace JobSeeker.Controllers
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Failed to delete resume object {Key} from storage.", resume.ResumeS3Key);
-                    TempData["ErrorMessage"] = "The resume could not be deleted from S3. Check your current AWS credentials.";
+                    TempData["ErrorMessage"] = "The resume could not be deleted. Please try again.";
                     return RedirectToAction(nameof(Edit));
                 }
 
@@ -366,7 +366,7 @@ namespace JobSeeker.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to upload certification to Amazon S3 for user {UserId}.", user.Id);
-                TempData["ErrorMessage"] = "Certification upload to S3 failed. Check the bucket name, Region and current Learner Lab credentials.";
+                TempData["ErrorMessage"] = "Certification upload failed. Please try again.";
                 return RedirectToAction(nameof(Edit));
             }
 
@@ -421,7 +421,7 @@ namespace JobSeeker.Controllers
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Failed to delete certification object {Key} from storage.", certification.CertificateS3Key);
-                    TempData["ErrorMessage"] = "The certification could not be deleted from S3. Check your current AWS credentials.";
+                    TempData["ErrorMessage"] = "The certification could not be deleted. Please try again.";
                     return RedirectToAction(nameof(Edit));
                 }
 
@@ -543,7 +543,7 @@ namespace JobSeeker.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to create public S3 URL for object {Key}.", key);
-                TempData["ErrorMessage"] = "The file URL could not be created. Check the S3 bucket name and Region.";
+                TempData["ErrorMessage"] = "The file could not be opened. Please try again.";
                 return Task.FromResult<IActionResult>(RedirectToAction(nameof(Index)));
             }
         }

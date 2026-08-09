@@ -61,10 +61,12 @@ namespace JobSeeker.Controllers
                     .ToListAsync())
                 .ToHashSet();
 
-            var applications = await _context.JobApplications
-                .AsNoTracking()
-                .Where(x => x.JobSeekerId == user.Id)
-                .ToDictionaryAsync(x => x.JobId);
+            var appliedJobIds = (await _context.JobApplications
+                    .AsNoTracking()
+                    .Where(x => x.JobSeekerId == user.Id)
+                    .Select(x => x.JobId)
+                    .ToListAsync())
+                .ToHashSet();
 
             var allOpenJobs = await _context.Jobs
                 .AsNoTracking()
@@ -95,7 +97,10 @@ namespace JobSeeker.Controllers
                 .OrderBy(x => x)
                 .ToList();
 
-            IEnumerable<Job> filteredJobs = allOpenJobs;
+            // Once a job seeker has applied, keep that job out of the discovery list.
+            // The application remains available from My Applications for status tracking.
+            IEnumerable<Job> filteredJobs = allOpenJobs
+                .Where(job => !appliedJobIds.Contains(job.JobId));
 
             if (!string.IsNullOrWhiteSpace(keyword))
             {
@@ -135,8 +140,6 @@ namespace JobSeeker.Controllers
             var items = filteredJobs.Select(job =>
             {
                 var result = JobMatchCalculator.Calculate(profile, seekerSkillIds, job);
-                applications.TryGetValue(job.JobId, out var application);
-
                 return new JobListingItemViewModel
                 {
                     Job = job,
@@ -145,8 +148,8 @@ namespace JobSeeker.Controllers
                     RequiredSkillCount = result.RequiredSkillCount,
                     MatchedSkills = result.MatchedSkills,
                     MissingSkills = result.MissingSkills,
-                    HasApplied = application != null,
-                    ApplicationStatus = application?.ApplicationStatus
+                    HasApplied = false,
+                    ApplicationStatus = null
                 };
             }).ToList();
 

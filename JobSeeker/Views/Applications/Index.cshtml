@@ -91,14 +91,6 @@
                             }
 
                             <div class="application-actions">
-                                @if (application.Job.IsTestData && application.ApplicationStatus is not "HIRED" and not "REJECTED" and not "WITHDRAWN")
-                                {
-                                    <form asp-action="AdvanceTestStatus" method="post">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="id" value="@application.ApplicationId" />
-                                        <button class="btn btn-sm btn-outline-secondary" type="submit">Test next status</button>
-                                    </form>
-                                }
 
                                 @if (application.ApplicationStatus is not "HIRED" and not "REJECTED" and not "WITHDRAWN")
                                 {

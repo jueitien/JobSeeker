@@ -96,7 +96,7 @@
             <strong>@Model.Jobs.Count job@(Model.Jobs.Count == 1 ? "" : "s") available</strong>
             <span>Match scores use your saved skills and career profile.</span>
         </div>
-        <a asp-controller="Applications" asp-action="Index" class="portal-link">My applications →</a>
+        <a asp-controller="Applications" asp-action="Index" class="portal-link">My applications</a>
     </div>
 
     @if (!Model.Jobs.Any())
@@ -131,12 +131,12 @@
                             <div class="job-meta-row">
                                 @if (!string.IsNullOrWhiteSpace(job.Location))
                                 {
-                                    <span>📍 @job.Location</span>
+                                    <span>Location: @job.Location</span>
                                 }
-                                <span>💼 @Friendly(job.EmploymentType)</span>
+                                <span>Employment: @Friendly(job.EmploymentType)</span>
                                 @if (!string.IsNullOrWhiteSpace(job.WorkplaceType))
                                 {
-                                    <span>🏢 @Friendly(job.WorkplaceType)</span>
+                                    <span>Work arrangement: @Friendly(job.WorkplaceType)</span>
                                 }
                                 @if (job.MinimumSalary.HasValue || job.MaximumSalary.HasValue)
                                 {
@@ -158,7 +158,7 @@
                                             @required.Skill.SkillName
                                             @if (matched)
                                             {
-                                                <span>✓</span>
+                                                <span class="skill-match-text">Matched</span>
                                             }
                                         </span>
                                     }
@@ -177,21 +177,11 @@
                                     }
                                 </div>
 
-                                @if (item.HasApplied)
-                                {
-                                    <div class="d-flex align-items-center gap-2">
-                                        <span class="application-status-badge">@Friendly(item.ApplicationStatus ?? "SUBMITTED")</span>
-                                        <a asp-controller="Applications" asp-action="Index" class="btn btn-outline-primary btn-sm">View application</a>
-                                    </div>
-                                }
-                                else
-                                {
-                                    <form asp-controller="Applications" asp-action="Apply" method="post">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="jobId" value="@job.JobId" />
-                                        <button type="submit" class="btn btn-primary">Apply now</button>
-                                    </form>
-                                }
+                                <form asp-controller="Applications" asp-action="Apply" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="jobId" value="@job.JobId" />
+                                    <button type="submit" class="btn btn-primary">Apply now</button>
+                                </form>
                             </div>
                         </div>
                     </div>

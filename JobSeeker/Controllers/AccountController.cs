@@ -265,7 +265,7 @@ namespace JobSeeker.Controllers
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Failed to upload profile image to Amazon S3 for user {UserId}.", user.Id);
-                    ModelState.AddModelError("profileImage", "Profile image upload to S3 failed. Check your bucket settings and Learner Lab credentials.");
+                    ModelState.AddModelError("profileImage", "Profile image upload failed. Please try again.");
                     return View(model);
                 }
             }

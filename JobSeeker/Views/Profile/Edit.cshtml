@@ -10,7 +10,7 @@
 <div class="profile-edit-page">
     <div class="page-title-row mb-4">
         <div>
-            <a asp-action="Index" class="back-link">← Back to profile</a>
+            <a asp-action="Index" class="back-link">Back to profile</a>
             <h1>Edit your profile</h1>
             <p>Manage your profile information, skills, resume and certifications in one place.</p>
         </div>
@@ -108,7 +108,7 @@
                 {
                     <div class="skill-chip">
                         <div><strong>@skill.Skill.SkillName</strong><small>@(skill.ProficiencyLevel ?? "Level not set")</small></div>
-                        <form asp-action="RemoveSkill" method="post"><input type="hidden" name="id" value="@skill.JobSeekerSkillId" /><button type="submit" aria-label="Remove skill">×</button></form>
+                        <form asp-action="RemoveSkill" method="post"><input type="hidden" name="id" value="@skill.JobSeekerSkillId" /><button type="submit" class="btn btn-sm btn-link text-danger p-0">Remove</button></form>
                     </div>
                 }
             </div>
@@ -191,7 +191,7 @@
                 @foreach (var certification in certifications)
                 {
                     <div class="document-item">
-                        <div class="document-icon">✓</div>
+                        <div class="document-icon">CERT</div>
                         <div class="flex-grow-1">
                             <strong>@certification.CertificationName</strong>
                             <small>@(certification.Description ?? "No description")</small>

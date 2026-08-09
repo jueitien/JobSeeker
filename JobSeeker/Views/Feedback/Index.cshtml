@@ -1,0 +1,229 @@
+@model JobSeeker.Models.ViewModels.FeedbackHubViewModel
+@{
+    ViewData["Title"] = "Feedback & Career Insights";
+}
+
+<div class="feedback-page">
+    <div class="jobs-page-heading mb-4">
+        <div>
+            <span class="section-eyebrow">Career development</span>
+            <h1>Feedback & career insights</h1>
+            <p>Ask a career counsellor for guidance and review skills that are currently common in available jobs.</p>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] is string successMessage)
+    {
+        <div class="alert alert-success portal-alert">@successMessage</div>
+    }
+    @if (TempData["InfoMessage"] is string infoMessage)
+    {
+        <div class="alert alert-info portal-alert">@infoMessage</div>
+    }
+    @if (TempData["ErrorMessage"] is string errorMessage)
+    {
+        <div class="alert alert-danger portal-alert">@errorMessage</div>
+    }
+
+    <div class="row g-4 mb-4">
+        <div class="col-lg-5">
+            <section class="portal-card h-100">
+                <div class="portal-card-header compact">
+                    <div>
+                        <span class="section-eyebrow">Ask for help</span>
+                        <h2 class="section-title">Request counsellor feedback</h2>
+                    </div>
+                </div>
+
+                <form asp-action="RequestFeedback" method="post" class="feedback-request-form">
+                    @Html.AntiForgeryToken()
+                    <div class="mb-3">
+                        <label class="form-label" for="requestType">Feedback type</label>
+                        <select id="requestType" name="requestType" class="form-select" required>
+                            <option value="">Choose a type</option>
+                            <option value="resume">Resume feedback</option>
+                            <option value="career">Career advice</option>
+                            <option value="skill">Skill recommendation</option>
+                            <option value="certification">Certification recommendation</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3" id="resumeSelection" hidden>
+                        <label class="form-label" for="resumeId">Resume to review</label>
+                        <select id="resumeId" name="resumeId" class="form-select">
+                            <option value="">Choose a resume</option>
+                            @foreach (var resume in Model.Resumes)
+                            {
+                                <option value="@resume.ResumeId">@(resume.ResumeTitle ?? "Resume")@(resume.IsPrimary ? " (Primary)" : "")</option>
+                            }
+                        </select>
+                        @if (!Model.Resumes.Any())
+                        {
+                            <div class="form-text">Upload a resume from Edit Profile before requesting a resume review.</div>
+                        }
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="requestMessage">What would you like help with?</label>
+                        <textarea id="requestMessage" name="requestMessage" class="form-control" rows="6" maxlength="2000" required
+                                  placeholder="Example: Please review whether my resume clearly presents my software development experience and suggest what I should improve."></textarea>
+                        <div class="form-text">Be specific so the counsellor can give more useful feedback.</div>
+                    </div>
+
+                    <button class="btn btn-primary w-100" type="submit">Send request</button>
+                </form>
+            </section>
+        </div>
+
+        <div class="col-lg-7">
+            <section class="portal-card h-100">
+                <div class="portal-card-header compact">
+                    <div>
+                        <span class="section-eyebrow">Platform job trends</span>
+                        <h2 class="section-title">Trending skills</h2>
+                    </div>
+                </div>
+                <p class="text-muted mb-3">Based on required skills in currently approved and open jobs on this platform.</p>
+
+                @if (!Model.TrendingSkills.Any())
+                {
+                    <div class="mini-empty">No skill trend data is available yet. Trends will appear when employers publish jobs with required skills.</div>
+                }
+                else
+                {
+                    <div class="trending-skill-list">
+                        @foreach (var skill in Model.TrendingSkills)
+                        {
+                            <div class="trending-skill-row">
+                                <div class="trending-skill-info">
+                                    <strong>@skill.SkillName</strong>
+                                    <span>Required by @skill.JobCount current job@(skill.JobCount == 1 ? "" : "s")</span>
+                                </div>
+                                <div class="trending-skill-actions">
+                                    <a asp-controller="Home" asp-action="JobSeeker" asp-route-keyword="@skill.SkillName" class="btn btn-sm btn-outline-primary">View jobs</a>
+                                    @if (skill.AlreadyAdded)
+                                    {
+                                        <span class="skill-added-label">In my skills</span>
+                                    }
+                                    else
+                                    {
+                                        <form asp-action="AddTrendingSkill" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="skillId" value="@skill.SkillId" />
+                                            <button class="btn btn-sm btn-primary" type="submit">Add to my skills</button>
+                                        </form>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </section>
+        </div>
+    </div>
+
+    <section class="portal-card">
+        <div class="portal-card-header compact">
+            <div>
+                <span class="section-eyebrow">History</span>
+                <h2 class="section-title">My feedback requests</h2>
+            </div>
+        </div>
+
+        @if (!Model.Requests.Any())
+        {
+            <div class="mini-empty">You have not requested any counsellor feedback yet.</div>
+        }
+        else
+        {
+            <div class="feedback-history-list">
+                @foreach (var request in Model.Requests)
+                {
+                    <article class="feedback-history-card">
+                        <div class="feedback-history-header">
+                            <div>
+                                <span class="feedback-type-label">@request.Type</span>
+                                <h3>@request.Title</h3>
+                                <small>Requested @request.CreatedAt.ToLocalTime().ToString("dd MMM yyyy")</small>
+                            </div>
+                            <span class="application-status-badge status-@request.Status.ToLowerInvariant().Replace("_", "-")">@Friendly(request.Status)</span>
+                        </div>
+
+                        @if (!string.IsNullOrWhiteSpace(request.RequestMessage))
+                        {
+                            <div class="feedback-request-copy">
+                                <label>Your request</label>
+                                <p>@request.RequestMessage</p>
+                            </div>
+                        }
+
+                        @if (request.Status == "COMPLETED")
+                        {
+                            <div class="feedback-response-box">
+                                <div class="feedback-response-heading">
+                                    <div>
+                                        <label>Career counsellor response</label>
+                                        @if (!string.IsNullOrWhiteSpace(request.CounsellorName))
+                                        {
+                                            <small>Prepared by @request.CounsellorName</small>
+                                        }
+                                    </div>
+                                </div>
+                                @if (!string.IsNullOrWhiteSpace(request.ResponseTitle))
+                                {
+                                    <h4>@request.ResponseTitle</h4>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(request.ResponseBody))
+                                {
+                                    <p>@request.ResponseBody</p>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(request.ResponseDetails))
+                                {
+                                    @foreach (var line in request.ResponseDetails.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+                                    {
+                                        <div class="feedback-response-detail">@line</div>
+                                    }
+                                }
+                            </div>
+                        }
+                        else if (request.Status == "DISMISSED")
+                        {
+                            <div class="feedback-pending-note">This request was declined. You can submit a new request if you still need guidance.</div>
+                        }
+                        else
+                        {
+                            <div class="feedback-pending-note">Waiting for the career counsellor to complete this request.</div>
+                        }
+                    </article>
+                }
+            </div>
+        }
+    </section>
+</div>
+
+@section Scripts {
+    <script>
+        (() => {
+            const requestType = document.getElementById('requestType');
+            const resumeSelection = document.getElementById('resumeSelection');
+            const resumeId = document.getElementById('resumeId');
+
+            const updateResumeVisibility = () => {
+                const needsResume = requestType.value === 'resume';
+                resumeSelection.hidden = !needsResume;
+                resumeId.required = needsResume;
+            };
+
+            requestType.addEventListener('change', updateResumeVisibility);
+            updateResumeVisibility();
+        })();
+    </script>
+}
+
+@functions {
+    private static string Friendly(string value)
+    {
+        var words = value.Replace("_", " ").ToLowerInvariant();
+        return System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(words);
+    }
+}

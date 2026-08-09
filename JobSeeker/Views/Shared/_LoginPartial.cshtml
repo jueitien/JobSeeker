@@ -37,30 +37,32 @@
                 <a class="dropdown-item account-dropdown-item"
                    asp-controller="Profile"
                    asp-action="Index">
-                    <span class="account-menu-icon">👤</span>
                     My Profile
                 </a>
 
                 <a class="dropdown-item account-dropdown-item"
                    asp-controller="Profile"
                    asp-action="Edit">
-                    <span class="account-menu-icon">✎</span>
                     Edit Profile
                 </a>
 
                 <a class="dropdown-item account-dropdown-item"
                    asp-controller="Applications"
                    asp-action="Index">
-                    <span class="account-menu-icon">▣</span>
                     My Applications
+                </a>
+
+                <a class="dropdown-item account-dropdown-item"
+                   asp-controller="Feedback"
+                   asp-action="Index">
+                    Feedback & Insights
                 </a>
             }
 
             <a class="dropdown-item account-dropdown-item"
                asp-controller="Account"
                asp-action="EditAccount">
-                <span class="account-menu-icon">⚙</span>
-                Account Settings
+                    Account Settings
             </a>
 
             @if (User.IsInRole(UserRoles.Employer))
@@ -68,7 +70,6 @@
                 <a class="dropdown-item account-dropdown-item"
                    asp-controller="Company"
                    asp-action="Index">
-                    <span class="account-menu-icon">🏢</span>
                     Manage Company
                 </a>
             }
@@ -81,7 +82,6 @@
                   class="m-0">
                 @Html.AntiForgeryToken()
                 <button type="submit" class="dropdown-item account-dropdown-item text-danger">
-                    <span class="account-menu-icon">↪</span>
                     Logout
                 </button>
             </form>
