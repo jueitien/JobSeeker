@@ -1,6 +1,7 @@
 using JobSeeker.Data;
 using JobSeeker.Models;
 using JobSeeker.Models.Employer;
+using JobSeeker.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -18,11 +19,19 @@ namespace JobSeeker.Controllers.Employer
 
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly S3StorageService _s3Storage;
+        private readonly ILogger<ApplicantsController> _logger;
 
-        public ApplicantsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        public ApplicantsController(
+            ApplicationDbContext context,
+            UserManager<ApplicationUser> userManager,
+            S3StorageService s3Storage,
+            ILogger<ApplicantsController> logger)
         {
             _context = context;
             _userManager = userManager;
+            _s3Storage = s3Storage;
+            _logger = logger;
         }
 
         // GET: /Applicants
@@ -96,6 +105,43 @@ namespace JobSeeker.Controllers.Employer
             };
 
             return View("~/Views/Employer/Applicants/Index.cshtml", viewModel);
+        }
+
+        // GET: /Applicants/ViewResume/{id}
+        // {id} is the JobApplication id. Only the employer who owns the job
+        // that the application was submitted to may view the attached resume.
+        [HttpGet]
+        public async Task<IActionResult> ViewResume(long id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
+            var application = await _context.JobApplications
+                .AsNoTracking()
+                .Include(a => a.Job)
+                .Include(a => a.Resume)
+                .FirstOrDefaultAsync(a => a.ApplicationId == id);
+
+            if (application == null
+                || application.Job.EmployerId != user.Id
+                || application.Resume == null
+                || string.IsNullOrWhiteSpace(application.Resume.ResumeS3Key))
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                var presignedUrl = await _s3Storage.GetPresignedUrlAsync(
+                    application.Resume.ResumeS3Key, TimeSpan.FromMinutes(5));
+                return Redirect(presignedUrl);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create presigned S3 URL for resume {Key}.", application.Resume.ResumeS3Key);
+                TempData["ErrorMessage"] = "The resume could not be opened. Check the S3 bucket name and Region.";
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         // POST: /Applicants/UpdateStatus

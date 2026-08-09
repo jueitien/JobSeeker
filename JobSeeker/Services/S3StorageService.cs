@@ -64,6 +64,31 @@ namespace JobSeeker.Services
             return $"https://{BucketName}.s3.{RegionName}.amazonaws.com/{encodedKey}";
         }
 
+        /// <summary>
+        /// Builds a time-limited, signed URL for a private object (e.g. a resume
+        /// or certification). Unlike <see cref="GetPublicUrl"/>, this does not
+        /// require a public bucket policy — the bucket can stay fully private
+        /// and only holders of this specific URL can access the object, and
+        /// only until it expires.
+        /// </summary>
+        public async Task<string> GetPresignedUrlAsync(
+            string key,
+            TimeSpan expiresIn,
+            CancellationToken cancellationToken = default)
+        {
+            EnsureConfigured();
+
+            var request = new GetPreSignedUrlRequest
+            {
+                BucketName = BucketName,
+                Key = key,
+                Verb = HttpVerb.GET,
+                Expires = DateTime.UtcNow.Add(expiresIn)
+            };
+
+            return await _s3.GetPreSignedURLAsync(request);
+        }
+
         public async Task DeleteAsync(
             string? key,
             CancellationToken cancellationToken = default)

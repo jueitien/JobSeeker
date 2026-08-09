@@ -524,27 +524,32 @@ namespace JobSeeker.Controllers
             return profile;
         }
 
-        private Task<IActionResult> OpenStoredFileAsync(string key)
+        private async Task<IActionResult> OpenStoredFileAsync(string key)
         {
             if (IsLegacyLocalPath(key))
             {
                 var fullPath = GetLegacyLocalPath(key);
                 if (!System.IO.File.Exists(fullPath))
-                    return Task.FromResult<IActionResult>(NotFound());
+                    return NotFound();
 
                 var contentType = S3StorageService.GetContentType(Path.GetExtension(fullPath));
-                return Task.FromResult<IActionResult>(PhysicalFile(fullPath, contentType));
+                return PhysicalFile(fullPath, contentType);
             }
 
             try
             {
-                return Task.FromResult<IActionResult>(Redirect(_s3Storage.GetPublicUrl(key)));
+                // Presigned URL: the bucket stays private, and only whoever
+                // holds this exact link — valid for 5 minutes — can access the
+                // file. The owner check already happened in the caller
+                // (ViewResume/ViewCertification) before we get here.
+                var presignedUrl = await _s3Storage.GetPresignedUrlAsync(key, TimeSpan.FromMinutes(5));
+                return Redirect(presignedUrl);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to create public S3 URL for object {Key}.", key);
-                TempData["ErrorMessage"] = "The file could not be opened. Please try again.";
-                return Task.FromResult<IActionResult>(RedirectToAction(nameof(Index)));
+                _logger.LogError(ex, "Failed to create presigned S3 URL for object {Key}.", key);
+                TempData["ErrorMessage"] = "The file could not be opened. Please check the S3 configuration and try again.";
+                return RedirectToAction(nameof(Index));
             }
         }
 

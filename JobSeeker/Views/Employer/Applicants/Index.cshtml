@@ -180,7 +180,7 @@ else
                             <div class="small">
                                 @if (!string.IsNullOrWhiteSpace(app.Resume?.ResumeS3Key))
                                 {
-                                    <a href="@app.Resume.ResumeS3Key" target="_blank" rel="noopener">
+                                    <a asp-action="ViewResume" asp-route-id="@app.ApplicationId" target="_blank" rel="noopener">
                                         @(app.Resume.ResumeTitle ?? "View resume")
                                     </a>
                                 }
