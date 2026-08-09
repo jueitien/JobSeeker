@@ -399,6 +399,115 @@ else
                         </div>
                     </div>
 
+                    @* ── Skills Requirement Section ── *@
+                    <hr class="my-4" />
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="fw-semibold mb-0">Skills Requirement</h6>
+                        <button type="button" class="btn btn-outline-primary btn-sm" id="addSkillRowBtn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none"
+                                 viewBox="0 0 24 24" stroke="currentColor" class="me-1" style="vertical-align:-2px">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                            </svg>
+                            Add Skill
+                        </button>
+                    </div>
+                    <p class="text-muted small mb-2">
+                        Select the skills required for this job and assign an importance weightage to each.
+                        The weightages must add up to exactly <strong>100%</strong>.
+                    </p>
+
+                    <span asp-validation-for="NewVacancy.SkillRequirements" class="text-danger small d-block mb-2"></span>
+
+                    <div id="skillRowsContainer" class="d-flex flex-column gap-2 mb-2">
+                        @{
+                            // Render existing rows (e.g. after a failed submission) or one empty starter row.
+                            var rowsToRender = Model.NewVacancy.SkillRequirements.Any()
+                                ? Model.NewVacancy.SkillRequirements
+                                : new List<JobSeeker.Models.Employer.SkillRequirementViewModel> { new() };
+                        }
+                        @for (var i = 0; i < rowsToRender.Count; i++)
+                        {
+                            var row = rowsToRender[i];
+                            <div class="row g-2 align-items-center skill-requirement-row">
+                                <div class="col-5">
+                                    <select name="NewVacancy.SkillRequirements[@i].SkillId" class="form-select skill-select">
+                                        <option value="0">— Select a skill —</option>
+                                        @foreach (var skill in Model.AvailableSkills)
+                                        {
+                                            <option value="@skill.SkillId" selected="@(row.SkillId == skill.SkillId)">@skill.SkillName</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-4">
+                                    <select name="NewVacancy.SkillRequirements[@i].RequirementType" class="form-select">
+                                        <option value="REQUIRED" selected="@(row.RequirementType == "REQUIRED")">Required</option>
+                                        <option value="PREFERRED" selected="@(row.RequirementType == "PREFERRED")">Preferred</option>
+                                        <option value="NICE_TO_HAVE" selected="@(row.RequirementType == "NICE_TO_HAVE")">Nice to Have</option>
+                                    </select>
+                                </div>
+                                <div class="col-2">
+                                    <div class="input-group">
+                                        <input type="number" name="NewVacancy.SkillRequirements[@i].ImportanceWeight"
+                                               class="form-control skill-weight" min="0" max="100" step="0.01"
+                                               value="@(row.ImportanceWeight == 0 ? "" : row.ImportanceWeight.ToString())"
+                                               placeholder="0" />
+                                        <span class="input-group-text">%</span>
+                                    </div>
+                                </div>
+                                <div class="col-1 text-end">
+                                    <button type="button" class="btn btn-outline-danger btn-sm remove-skill-row" title="Remove">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none"
+                                             viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="d-flex justify-content-end align-items-center gap-2">
+                        <span class="text-muted small">Total weightage:</span>
+                        <span id="skillWeightTotal" class="fw-semibold small">0%</span>
+                    </div>
+
+                    @* Hidden template used by JS to add new skill rows. Index placeholder "__index__" gets replaced. *@
+                    <template id="skillRowTemplate">
+                        <div class="row g-2 align-items-center skill-requirement-row">
+                            <div class="col-5">
+                                <select name="NewVacancy.SkillRequirements[__index__].SkillId" class="form-select skill-select">
+                                    <option value="0">— Select a skill —</option>
+                                    @foreach (var skill in Model.AvailableSkills)
+                                    {
+                                        <option value="@skill.SkillId">@skill.SkillName</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-4">
+                                <select name="NewVacancy.SkillRequirements[__index__].RequirementType" class="form-select">
+                                    <option value="REQUIRED">Required</option>
+                                    <option value="PREFERRED">Preferred</option>
+                                    <option value="NICE_TO_HAVE">Nice to Have</option>
+                                </select>
+                            </div>
+                            <div class="col-2">
+                                <div class="input-group">
+                                    <input type="number" name="NewVacancy.SkillRequirements[__index__].ImportanceWeight"
+                                           class="form-control skill-weight" min="0" max="100" step="0.01" placeholder="0" />
+                                    <span class="input-group-text">%</span>
+                                </div>
+                            </div>
+                            <div class="col-1 text-end">
+                                <button type="button" class="btn btn-outline-danger btn-sm remove-skill-row" title="Remove">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none"
+                                         viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+
                 </div>
 
                 <div class="modal-footer">

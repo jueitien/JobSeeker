@@ -65,6 +65,11 @@ namespace JobSeeker.Controllers.Employer
                 .AsNoTracking()
                 .FirstOrDefaultAsync(c => c.EmployerId == user.Id);
 
+            var skills = await _context.Skills
+                .AsNoTracking()
+                .OrderBy(s => s.SkillName)
+                .ToListAsync();
+
             var viewModel = new VacanciesPageViewModel
             {
                 PublishedVacancies = vacancies,
@@ -72,6 +77,7 @@ namespace JobSeeker.Controllers.Employer
                 FilterEmploymentType = filterEmploymentType,
                 FilterWorkplaceType = filterWorkplaceType,
                 FilterLocation = filterLocation,
+                AvailableSkills = skills,
                 NewVacancy = new VacancyFormViewModel
                 {
                     // Auto-fill from the employer's saved company profile, if any.
@@ -104,11 +110,17 @@ namespace JobSeeker.Controllers.Employer
                     .AsNoTracking()
                     .AnyAsync(c => c.EmployerId == user.Id);
 
+                var skills = await _context.Skills
+                    .AsNoTracking()
+                    .OrderBy(s => s.SkillName)
+                    .ToListAsync();
+
                 var viewModel = new VacanciesPageViewModel
                 {
                     NewVacancy = model,
                     PublishedVacancies = vacancies,
-                    HasCompanyDetails = hasCompany
+                    HasCompanyDetails = hasCompany,
+                    AvailableSkills = skills
                 };
                 return View("~/Views/Employer/Vacancies/Index.cshtml", viewModel);
             }
@@ -140,6 +152,20 @@ namespace JobSeeker.Controllers.Employer
             };
 
             _context.Jobs.Add(job);
+            await _context.SaveChangesAsync();
+
+            // Persist the Skills Requirement rows into job_required_skills.
+            foreach (var skillRow in model.SkillRequirements.Where(r => r.SkillId > 0))
+            {
+                _context.JobRequiredSkills.Add(new JobRequiredSkill
+                {
+                    JobId = job.JobId,
+                    SkillId = skillRow.SkillId,
+                    RequirementType = skillRow.RequirementType,
+                    ImportanceWeight = skillRow.ImportanceWeight
+                });
+            }
+
             await _context.SaveChangesAsync();
 
             TempData["SuccessMessage"] = "Job vacancy submitted successfully! It will be visible to job seekers once approved by an administrator.";

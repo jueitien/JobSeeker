@@ -1,7 +1,27 @@
 using System.ComponentModel.DataAnnotations;
+using JobSeeker.Models;
 
 namespace JobSeeker.Models.Employer
 {
+    /// <summary>
+    /// A single row in the "Skills Requirement" section of the Post a Vacancy
+    /// form. Maps onto a JobRequiredSkill row (job_required_skills table).
+    /// </summary>
+    public class SkillRequirementViewModel
+    {
+        [Required(ErrorMessage = "Select a skill.")]
+        [Display(Name = "Skill")]
+        public long SkillId { get; set; }
+
+        [Required(ErrorMessage = "Select a requirement type.")]
+        [Display(Name = "Requirement Type")]
+        public string RequirementType { get; set; } = "REQUIRED";   // REQUIRED, PREFERRED, NICE_TO_HAVE
+
+        [Range(0.01, 100, ErrorMessage = "Weightage must be between 0.01 and 100.")]
+        [Display(Name = "Importance Weightage (%)")]
+        public decimal ImportanceWeight { get; set; }
+    }
+
     /// <summary>
     /// Form model used when an Employer creates a new job vacancy.
     /// Field names/values line up with the `jobs` table (see JobSeeker.Models.Job)
@@ -66,6 +86,12 @@ namespace JobSeeker.Models.Employer
         [Display(Name = "Responsibilities")]
         public string? Responsibilities { get; set; }
 
+        /// <summary>
+        /// Skills Requirement rows. Each row's ImportanceWeight must sum to
+        /// exactly 100% across the whole list (enforced below).
+        /// </summary>
+        public List<SkillRequirementViewModel> SkillRequirements { get; set; } = new();
+
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             if (MinimumSalary.HasValue && MaximumSalary.HasValue && MaximumSalary < MinimumSalary)
@@ -81,6 +107,40 @@ namespace JobSeeker.Models.Employer
                     "Application deadline cannot be in the past.",
                     new[] { nameof(ApplicationDeadline) });
             }
+
+            var validRows = SkillRequirements
+                .Where(r => r.SkillId > 0)
+                .ToList();
+
+            if (validRows.Count == 0)
+            {
+                yield return new ValidationResult(
+                    "Add at least one skill requirement.",
+                    new[] { nameof(SkillRequirements) });
+            }
+            else
+            {
+                var duplicateSkillIds = validRows
+                    .GroupBy(r => r.SkillId)
+                    .Where(g => g.Count() > 1)
+                    .Select(g => g.Key)
+                    .ToList();
+
+                if (duplicateSkillIds.Count > 0)
+                {
+                    yield return new ValidationResult(
+                        "Each skill can only be added once.",
+                        new[] { nameof(SkillRequirements) });
+                }
+
+                var totalWeight = validRows.Sum(r => r.ImportanceWeight);
+                if (Math.Round(totalWeight, 2) != 100m)
+                {
+                    yield return new ValidationResult(
+                        $"The total importance weightage for all skills must equal exactly 100%. Current total: {totalWeight:0.##}%.",
+                        new[] { nameof(SkillRequirements) });
+                }
+            }
         }
     }
 
@@ -92,6 +152,9 @@ namespace JobSeeker.Models.Employer
     {
         public VacancyFormViewModel NewVacancy { get; set; } = new();
         public List<Job> PublishedVacancies { get; set; } = new();
+
+        /// <summary>All skills from the skills table, used to populate the skill dropdowns.</summary>
+        public List<Skill> AvailableSkills { get; set; } = new();
 
         public string? SearchKeyword { get; set; }
         public string? FilterEmploymentType { get; set; }
