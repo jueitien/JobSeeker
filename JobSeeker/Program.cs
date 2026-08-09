@@ -90,7 +90,15 @@ using (var scope = app.Services.CreateScope())
         await IdentitySeeder.SeedAdminUserAsync(
             scope.ServiceProvider);
 
-        await CareerCounsellorSeeder.SeedRequestsAsync(scope.ServiceProvider);
+        // Seed demo data only while developing and testing locally.
+        if (app.Environment.IsDevelopment())
+        {
+            await IdentitySeeder.SeedFakeAdminDataAsync(
+                scope.ServiceProvider);
+
+            await CareerCounsellorSeeder.SeedRequestsAsync(
+                scope.ServiceProvider);
+        }
     }
     catch (Exception ex)
     {

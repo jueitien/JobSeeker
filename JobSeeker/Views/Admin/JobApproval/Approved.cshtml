@@ -1,3 +1,4 @@
+@model JobSeeker.Models.ViewModels.Admin.JobApprovalViewModel
 @{
     ViewData["Title"] = "Approved Job Postings";
 }
@@ -5,46 +6,52 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>Job Postings</h2>
     <div class="d-flex gap-2">
-        <a asp-action="Pending" class="btn btn-outline-warning btn-sm">Pending</a>
+        <a asp-action="Pending"  class="btn btn-outline-warning btn-sm">Pending</a>
         <a asp-action="Approved" class="btn btn-success btn-sm">Approved</a>
         <a asp-action="Rejected" class="btn btn-outline-danger btn-sm">Rejected</a>
     </div>
 </div>
 
-<!-- Filters -->
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-body">
-        <div class="row g-2">
-            <div class="col-md-4">
-                <input type="text" class="form-control" placeholder="Search job title or company..." />
-            </div>
-            <div class="col-md-3">
-                <select class="form-select">
-                    <option value="">All Employment Types</option>
-                    <option>Full Time</option>
-                    <option>Part Time</option>
-                    <option>Contract</option>
-                    <option>Internship</option>
-                    <option>Freelance</option>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <select class="form-select">
-                    <option value="">All Statuses</option>
-                    <option>Open</option>
-                    <option>Closed</option>
-                    <option>Filled</option>
-                    <option>Expired</option>
-                </select>
-            </div>
-            <div class="col-md-2">
-                <button class="btn btn-primary w-100">Search</button>
+<form method="get" asp-action="Approved">
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-2">
+                <div class="col-md-4">
+                    <input type="text" name="keyword" value="@Model.SearchKeyword"
+                           class="form-control" placeholder="Search job title or company..." />
+                </div>
+                <div class="col-md-3">
+                    <select name="employmentType" class="form-select">
+                        <option value="">All Employment Types</option>
+                        @foreach (var (val, label) in new[] { ("FULL_TIME","Full Time"),("PART_TIME","Part Time"),("CONTRACT","Contract"),("INTERNSHIP","Internship"),("FREELANCE","Freelance") })
+                        {
+                            if (Model.FilterEmploymentType == val)
+                            { <option value="@val" selected>@label</option> }
+                            else
+                            { <option value="@val">@label</option> }
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select name="jobStatus" class="form-select">
+                        <option value="">All Statuses</option>
+                        @foreach (var (val, label) in new[] { ("OPEN","Open"),("CLOSED","Closed"),("FILLED","Filled"),("EXPIRED","Expired") })
+                        {
+                            if (Model.FilterJobStatus == val)
+                            { <option value="@val" selected>@label</option> }
+                            else
+                            { <option value="@val">@label</option> }
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">Search</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
+</form>
 
-<!-- Approved Jobs Table -->
 <div class="card border-0 shadow-sm">
     <div class="card-body p-0">
         <div class="table-responsive">
@@ -58,27 +65,41 @@
                         <th>Status</th>
                         <th>Approved At</th>
                         <th>Deadline</th>
-                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td colspan="8" class="text-center text-muted py-5">
-                            No approved job postings found.
-                        </td>
-                    </tr>
+                    @if (!Model.Jobs.Any())
+                    {
+                        <tr><td colspan="7" class="text-center text-muted py-5">No approved job postings found.</td></tr>
+                    }
+                    else
+                    {
+                        var i = 1;
+                        @foreach (var job in Model.Jobs)
+                        {
+                            var statusBadge = job.JobStatus switch {
+                                "OPEN"    => "bg-success",
+                                "CLOSED"  => "bg-secondary",
+                                "FILLED"  => "bg-info text-dark",
+                                "EXPIRED" => "bg-warning text-dark",
+                                _         => "bg-secondary"
+                            };
+                            <tr>
+                                <td>@(i++)</td>
+                                <td>@job.JobTitle</td>
+                                <td>@job.CompanyName</td>
+                                <td><span class="badge bg-light text-dark border">@job.EmploymentType</span></td>
+                                <td><span class="badge @statusBadge">@job.JobStatus</span></td>
+                                <td>@(job.ApprovedAt?.ToString("dd MMM yyyy") ?? "—")</td>
+                                <td>@(job.ApplicationDeadline?.ToString("dd MMM yyyy") ?? "—")</td>
+                            </tr>
+                        }
+                    }
                 </tbody>
             </table>
         </div>
     </div>
-    <div class="card-footer bg-white d-flex justify-content-between align-items-center">
-        <span class="text-muted small">Showing 0 results</span>
-        <nav>
-            <ul class="pagination pagination-sm mb-0">
-                <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
-                <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                <li class="page-item disabled"><a class="page-link" href="#">Next</a></li>
-            </ul>
-        </nav>
+    <div class="card-footer bg-white">
+        <span class="text-muted small">Showing @Model.TotalCount result(s)</span>
     </div>
 </div>
