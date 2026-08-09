@@ -33,7 +33,7 @@ namespace JobSeeker.Migrations
                 {
                     table.PrimaryKey("PK_employer_profiles", x => x.EmployerId);
                     table.ForeignKey("FK_employer_profiles_AspNetUsers_EmployerId", x => x.EmployerId, "AspNetUsers", "Id", onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey("FK_employer_profiles_AspNetUsers_VerifiedBy",  x => x.VerifiedBy, "AspNetUsers", "Id", onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey("FK_employer_profiles_AspNetUsers_VerifiedBy",  x => x.VerifiedBy, "AspNetUsers", "Id", onDelete: ReferentialAction.NoAction);
                 });
 
             migrationBuilder.CreateIndex("IX_employer_profiles_VerifiedBy", "employer_profiles", "VerifiedBy");

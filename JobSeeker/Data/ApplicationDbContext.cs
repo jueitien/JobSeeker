@@ -245,7 +245,7 @@ namespace JobSeeker.Data
                 entity.HasOne(e => e.Verifier)
                     .WithMany()
                     .HasForeignKey(e => e.VerifiedBy)
-                    .OnDelete(DeleteBehavior.SetNull);
+                    .OnDelete(DeleteBehavior.NoAction);
             });
 
             modelBuilder.Entity<AuditLog>(entity =>
