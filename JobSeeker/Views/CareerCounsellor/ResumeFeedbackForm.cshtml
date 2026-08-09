@@ -1,351 +1,92 @@
-﻿@{
-    ViewData["Title"] = "Provide Resume Feedback";
-    int requestId = ViewBag.RequestId ?? 0;
-}
-<head>
-    <link rel="stylesheet" href="~/css/Counsellor.css" />
-</head>
+@model JobSeeker.Models.ResumeFeedback
 
-<div class="container py-4" style="max-width: 900px;">
-    <div id="messageArea"></div>
-    <div class="d-flex justify-content-between align-items-start mb-4">
+@{
+    ViewData["Title"] = "Provide Resume Feedback";
+    var readOnly = Model.FeedbackStatus == "COMPLETED";
+}
+
+<link rel="stylesheet" href="~/css/Counsellor.css" />
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h1 class="h3 mb-1">Resume Feedback</h1>
+            <p class="text-muted mb-0">
+                Provide structured feedback for the selected resume.
+            </p>
         </div>
-
-        <a asp-controller="CareerCounsellor"
-           asp-action="ResumeReview"
-           class="btn-close">
-        </a>
+        <a asp-action="ResumeReview" class="btn btn-outline-secondary">Back</a>
     </div>
 
-   
-    <div id="requestNotFound" class="alert alert-danger d-none">
-        The selected resume-feedback request could not be found.
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Job Seeker</dt>
+                <dd class="col-sm-9">@Model.Resume.JobSeekerProfile.User.FullName</dd>
+
+                <dt class="col-sm-3">Resume</dt>
+                <dd class="col-sm-9">@Model.Resume.ResumeTitle</dd>
+
+                <dt class="col-sm-3">Request</dt>
+                <dd class="col-sm-9">@Model.RequestMessage</dd>
+
+                <dt class="col-sm-3">Status</dt>
+                <dd class="col-sm-9">@Model.FeedbackStatus.Replace("_", " ")</dd>
+            </dl>
+        </div>
     </div>
 
-    <div id="feedbackContent" class="d-none">
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-body p-4">
-                <h2 class="h5 mb-3">Request Information</h2>
+    <form asp-action="SaveResumeFeedback" method="post" class="card shadow-sm">
+        <div class="card-body">
+            <input asp-for="ResumeFeedbackId" type="hidden" />
 
-                <dl class="row mb-0">
-                    <dt class="col-sm-4">Job Seeker</dt>
-                    <dd class="col-sm-8" id="jobSeekerName"></dd>
+            <div class="mb-3">
+                <label asp-for="OverallComment" class="form-label">Overall Comment</label>
+                <textarea asp-for="OverallComment"
+                          class="form-control"
+                          rows="4"
+                          disabled="@readOnly"></textarea>
+            </div>
 
-                    <dt class="col-sm-4">Resume</dt>
-                    <dd class="col-sm-8" id="resumeTitle"></dd>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Strengths" class="form-label"></label>
+                    <textarea asp-for="Strengths"
+                              class="form-control"
+                              rows="5"
+                              disabled="@readOnly"></textarea>
+                </div>
 
-                    <dt class="col-sm-4">Request</dt>
-                    <dd class="col-sm-8" id="requestDescription"></dd>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Weaknesses" class="form-label"></label>
+                    <textarea asp-for="Weaknesses"
+                              class="form-control"
+                              rows="5"
+                              disabled="@readOnly"></textarea>
+                </div>
+            </div>
 
-                    <dt class="col-sm-4">Status</dt>
-                    <dd class="col-sm-8" id="requestStatus"></dd>
-                </dl>
+            <div class="mb-3">
+                <label asp-for="RecommendedChanges" class="form-label">
+                    Recommended Changes
+                </label>
+                <textarea asp-for="RecommendedChanges"
+                          class="form-control"
+                          rows="5"
+                          disabled="@readOnly"></textarea>
             </div>
         </div>
 
-        <div class="card border-0 shadow-sm">
-            <div class="card-body p-4">
-                <form id="feedbackForm">
-                    <div class="mb-3">
-                        <label for="overallComment" class="form-label">
-                            Overall Comment
-                        </label>
-
-                        <textarea id="overallComment"
-                                  class="form-control"
-                                  rows="4"
-                                  placeholder="Provide an overall evaluation of the resume."></textarea>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="strengths" class="form-label">
-                                Strengths
-                            </label>
-
-                            <textarea id="strengths"
-                                      class="form-control"
-                                      rows="4"
-                                      placeholder="Describe the strong areas of the resume."></textarea>
-                        </div>
-
-                        <div class="col-md-6 mb-3">
-                            <label for="weaknesses" class="form-label">
-                                Weaknesses
-                            </label>
-
-                            <textarea id="weaknesses"
-                                      class="form-control"
-                                      rows="4"
-                                      placeholder="Describe the areas that need improvement."></textarea>
-                        </div>
-                    </div>
-
-                    <div class="mb-4">
-                        <label for="recommendedChanges" class="form-label">
-                            Recommended Changes
-                        </label>
-
-                        <textarea id="recommendedChanges"
-                                  class="form-control"
-                                  rows="4"
-                                  placeholder="Suggest specific improvements to the resume."></textarea>
-                    </div>
-
-                    <div id="formActions"
-                         class="d-flex flex-wrap justify-content-end gap-2">
-
-                        <button type="button"
-                                class="btn btn-outline-primary"
-                                onclick="saveDraft()">
-                            Save Draft
-                        </button>
-
-                        <button type="button"
-                                class="btn btn-primary"
-                                onclick="sendFeedback()">
-                            Send Feedback
-                        </button>
-                    </div>
-                </form>
+        @if (!readOnly)
+        {
+            <div class="card-footer d-flex justify-content-end gap-2">
+                <button name="command" value="draft" class="btn btn-outline-primary">
+                    Save Draft
+                </button>
+                <button name="command" value="complete" class="btn btn-primary">
+                    Send Feedback
+                </button>
             </div>
-        </div>
-    </div>
+        }
+    </form>
 </div>
-
-@section Scripts {
-    <script>
-        const requestId = @requestId;
-        const requestStorageKey = "resumeFeedbackRequests";
-        const feedbackStorageKey = "resumeFeedbackDrafts";
-
-        let requests = [];
-        let feedbackDrafts = [];
-        let selectedRequest = null;
-
-        document.addEventListener("DOMContentLoaded", function() {
-            requests = JSON.parse(
-                localStorage.getItem(requestStorageKey) || "[]"
-            );
-
-            feedbackDrafts = JSON.parse(
-                localStorage.getItem(feedbackStorageKey) || "[]"
-            );
-
-            selectedRequest = requests.find(function(request) {
-                return request.id === requestId;
-            });
-
-            if (!selectedRequest) {
-                document
-                    .getElementById("requestNotFound")
-                    .classList.remove("d-none");
-
-                return;
-            }
-
-            displayRequest();
-            loadExistingFeedback();
-        });
-
-        function displayRequest() {
-            document
-                .getElementById("feedbackContent")
-                .classList.remove("d-none");
-
-            document.getElementById("jobSeekerName").textContent =
-                selectedRequest.jobSeeker;
-
-            document.getElementById("resumeTitle").textContent =
-                selectedRequest.resumeTitle;
-
-            document.getElementById("requestDescription").textContent =
-                selectedRequest.description;
-
-            document.getElementById("requestStatus").innerHTML =
-                createStatusBadge(selectedRequest.status);
-
-            if (selectedRequest.status === "COMPLETED") {
-                makeFormReadOnly();
-            }
-        }
-
-        function loadExistingFeedback() {
-            const existingFeedback = feedbackDrafts.find(function(feedback) {
-                return feedback.requestId === requestId;
-            });
-
-            if (!existingFeedback) {
-                return;
-            }
-
-            document.getElementById("overallComment").value =
-                existingFeedback.overallComment || "";
-
-            document.getElementById("strengths").value =
-                existingFeedback.strengths || "";
-
-            document.getElementById("weaknesses").value =
-                existingFeedback.weaknesses || "";
-
-            document.getElementById("recommendedChanges").value =
-                existingFeedback.recommendedChanges || "";
-        }
-
-        function collectFeedback() {
-            return {
-                requestId: requestId,
-
-                overallComment:
-                    document.getElementById("overallComment").value.trim(),
-
-                strengths:
-                    document.getElementById("strengths").value.trim(),
-
-                weaknesses:
-                    document.getElementById("weaknesses").value.trim(),
-
-                recommendedChanges:
-                    document.getElementById("recommendedChanges").value.trim(),
-
-                updatedAt: new Date().toISOString()
-            };
-        }
-
-        function saveDraft() {
-            const feedback = collectFeedback();
-
-            saveFeedbackRecord(feedback);
-
-            selectedRequest.status = "IN_PROGRESS";
-            saveRequests();
-
-            document.getElementById("requestStatus").innerHTML =
-                createStatusBadge("IN_PROGRESS");
-
-            showMessage(
-                "The resume feedback draft was saved. " +
-                "The request remains In Progress.",
-                "success"
-            );
-
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
-        }
-
-        function sendFeedback() {
-            const feedback = collectFeedback();
-
-            if (!feedback.overallComment) {
-                showMessage(
-                    "Please provide an overall comment before sending.",
-                    "danger"
-                );
-
-                document.getElementById("overallComment").focus();
-                return;
-            }
-
-            feedback.sentAt = new Date().toISOString();
-            saveFeedbackRecord(feedback);
-
-            selectedRequest.status = "COMPLETED";
-            saveRequests();
-
-            document.getElementById("requestStatus").innerHTML =
-                createStatusBadge("COMPLETED");
-
-            makeFormReadOnly();
-
-            showMessage(
-                "The resume feedback was sent successfully.",
-                "success"
-            );
-            return;
-        }
-
-        function saveFeedbackRecord(feedback) {
-            const existingIndex =
-                feedbackDrafts.findIndex(function(item) {
-                    return item.requestId === requestId;
-                });
-
-            if (existingIndex >= 0) {
-                feedbackDrafts[existingIndex] = feedback;
-            } else {
-                feedbackDrafts.push(feedback);
-            }
-
-            localStorage.setItem(
-                feedbackStorageKey,
-                JSON.stringify(feedbackDrafts)
-            );
-        }
-
-        function saveRequests() {
-            localStorage.setItem(
-                requestStorageKey,
-                JSON.stringify(requests)
-            );
-        }
-
-        function makeFormReadOnly() {
-            document
-                .querySelectorAll(
-                    "#feedbackForm textarea, #feedbackForm input, " +
-                    "#feedbackForm select"
-                )
-                .forEach(function(field) {
-                    field.disabled = true;
-                });
-
-            document
-                .getElementById("formActions")
-                .classList.add("d-none");
-        }
-
-        function createStatusBadge(status) {
-            if (status === "NEW") {
-                return '<span class="badge badge-new d-inline-flex align-items-center justify-content-center">New</span>';
-            }
-
-            if (status === "IN_PROGRESS") {
-                return '<span class="badge badge-progress d-inline-flex align-items-center justify-content-center">In Progress</span>';
-            }
-
-            if (status === "COMPLETED") {
-                return '<span class="badge badge-completed d-inline-flex align-items-center justify-content-center">Completed</span>';
-            }
-
-            return '<span class="badge badge-dismissed d-inline-flex align-items-center justify-content-center">Dismissed</span>';
-        }
-
-        function showMessage(message, type) {
-            document.getElementById("messageArea").innerHTML = `
-                        <div class="alert alert-${type} alert-dismissible fade show">
-                            ${escapeHtml(message)}
-
-                            <button type="button"
-                                    class="btn-close"
-                                    data-bs-dismiss="alert">
-                            </button>
-                        </div>
-                    `;
-
-            window.scrollTo({
-                top: 0,
-                behavior: "smooth"
-            });
-        }
-
-        function escapeHtml(value) {
-            const element = document.createElement("div");
-            element.textContent = value ?? "";
-            return element.innerHTML;
-        }
-    </script>
-}

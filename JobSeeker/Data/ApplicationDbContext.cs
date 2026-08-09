@@ -17,6 +17,10 @@ namespace JobSeeker.Data
         public DbSet<EmployerProfile> EmployerProfiles => Set<EmployerProfile>();
         public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
         public DbSet<SystemReport> SystemReports => Set<SystemReport>();
+        public DbSet<ResumeFeedback> ResumeFeedback => Set<ResumeFeedback>();
+        public DbSet<CareerRecommendation> CareerRecommendations => Set<CareerRecommendation>();
+        public DbSet<SkillRecommendation> SkillRecommendations => Set<SkillRecommendation>();
+        public DbSet<CertificationRecommendation> CertificationRecommendations => Set<CertificationRecommendation>();
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
@@ -71,6 +75,8 @@ namespace JobSeeker.Data
                     .HasForeignKey(application => application.JobSeekerId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
+
+            ConfigureCounsellorModels(modelBuilder);
 
             modelBuilder.Entity<Resume>(entity =>
             {
@@ -284,6 +290,98 @@ namespace JobSeeker.Data
                 entity.HasIndex(r => r.GeneratedBy);
                 entity.HasIndex(r => r.GeneratedAt);
             });
+        }
+
+        private static void ConfigureCounsellorModels(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<ResumeFeedback>(entity =>
+            {
+                entity.ToTable("resume_feedback", table => table.HasCheckConstraint("chk_feedback_status", "[feedback_status] IN ('NEW','IN_PROGRESS','COMPLETED','DISMISSED')"));
+                entity.HasKey(x => x.ResumeFeedbackId);
+                entity.Property(x => x.ResumeFeedbackId).HasColumnName("resume_feedback_id");
+                entity.Property(x => x.ResumeId).HasColumnName("resume_id");
+                entity.Property(x => x.CounsellorId).HasColumnName("counsellor_id");
+                entity.Property(x => x.OverallComment).HasColumnName("overall_comment").HasColumnType("nvarchar(max)");
+                entity.Property(x => x.RequestMessage).HasColumnName("request_message").HasColumnType("nvarchar(max)");
+                entity.Property(x => x.Strengths).HasColumnName("strengths").HasColumnType("nvarchar(max)");
+                entity.Property(x => x.Weaknesses).HasColumnName("weaknesses").HasColumnType("nvarchar(max)");
+                entity.Property(x => x.RecommendedChanges).HasColumnName("recommended_changes").HasColumnType("nvarchar(max)");
+                entity.Property(x => x.FeedbackStatus).HasColumnName("feedback_status").HasDefaultValue("NEW");
+                ConfigureTimestamps(entity);
+                entity.HasOne(x => x.Resume).WithMany(x => x.FeedbackRequests).HasForeignKey(x => x.ResumeId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(x => x.Counsellor).WithMany().HasForeignKey(x => x.CounsellorId).OnDelete(DeleteBehavior.NoAction);
+            });
+
+            modelBuilder.Entity<CareerRecommendation>(entity =>
+            {
+                entity.ToTable("career_recommendations", table =>
+                {
+                    table.HasCheckConstraint("chk_career_recommendation_source", "[recommendation_source] IN ('SYSTEM','COUNSELLOR')");
+                    table.HasCheckConstraint("chk_career_recommendation_status", "[recommendation_status] IN ('NEW','IN_PROGRESS','COMPLETED','DISMISSED')");
+                });
+                entity.HasKey(x => x.CareerRecommendationId);
+                entity.Property(x => x.CareerRecommendationId).HasColumnName("career_recommendation_id");
+                ConfigureRecommendationBase(entity);
+                entity.Property(x => x.RecommendedJobTitle).HasColumnName("recommended_job_title");
+                entity.Property(x => x.RecommendedIndustry).HasColumnName("recommended_industry");
+                entity.Property(x => x.RecommendationReason).HasColumnName("recommendation_reason").HasColumnType("nvarchar(max)");
+                entity.Property(x => x.RequiredImprovements).HasColumnName("required_improvements").HasColumnType("nvarchar(max)");
+                entity.HasOne(x => x.JobSeeker).WithMany(x => x.CareerRecommendations).HasForeignKey(x => x.JobSeekerId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(x => x.Counsellor).WithMany().HasForeignKey(x => x.CounsellorId).OnDelete(DeleteBehavior.NoAction);
+            });
+
+            modelBuilder.Entity<SkillRecommendation>(entity =>
+            {
+                entity.ToTable("skill_recommendations", table =>
+                {
+                    table.HasCheckConstraint("chk_skill_priority", "[priority_level] IN ('LOW','MEDIUM','HIGH')");
+                    table.HasCheckConstraint("chk_skill_recommendation_source", "[recommendation_source] IN ('SYSTEM','COUNSELLOR')");
+                    table.HasCheckConstraint("chk_skill_recommendation_status", "[recommendation_status] IN ('NEW','IN_PROGRESS','COMPLETED','DISMISSED')");
+                });
+                entity.HasKey(x => x.SkillRecommendationId);
+                entity.Property(x => x.SkillRecommendationId).HasColumnName("skill_recommendation_id");
+                ConfigureRecommendationBase(entity);
+                entity.Property(x => x.RecommendedSkill).HasColumnName("recommended_skill").HasColumnType("nvarchar(max)");
+                entity.Property(x => x.RecommendationReason).HasColumnName("recommendation_reason").HasColumnType("nvarchar(max)");
+                entity.Property(x => x.PriorityLevel).HasColumnName("priority_level").HasDefaultValue("MEDIUM");
+                entity.HasOne(x => x.JobSeeker).WithMany(x => x.SkillRecommendations).HasForeignKey(x => x.JobSeekerId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(x => x.Counsellor).WithMany().HasForeignKey(x => x.CounsellorId).OnDelete(DeleteBehavior.NoAction);
+            });
+
+            modelBuilder.Entity<CertificationRecommendation>(entity =>
+            {
+                entity.ToTable("certification_recommendations", table =>
+                {
+                    table.HasCheckConstraint("chk_certification_priority", "[priority_level] IN ('LOW','MEDIUM','HIGH')");
+                    table.HasCheckConstraint("chk_certification_recommendation_source", "[recommendation_source] IN ('SYSTEM','COUNSELLOR')");
+                    table.HasCheckConstraint("chk_certification_recommendation_status", "[recommendation_status] IN ('NEW','IN_PROGRESS','COMPLETED','DISMISSED')");
+                });
+                entity.HasKey(x => x.CertificationRecommendationId);
+                entity.Property(x => x.CertificationRecommendationId).HasColumnName("certification_recommendation_id");
+                ConfigureRecommendationBase(entity);
+                entity.Property(x => x.CertificationName).HasColumnName("certification_name");
+                entity.Property(x => x.IssuingOrganization).HasColumnName("issuing_organization");
+                entity.Property(x => x.RecommendationReason).HasColumnName("recommendation_reason").HasColumnType("nvarchar(max)");
+                entity.Property(x => x.PriorityLevel).HasColumnName("priority_level").HasDefaultValue("MEDIUM");
+                entity.HasOne(x => x.JobSeeker).WithMany(x => x.CertificationRecommendations).HasForeignKey(x => x.JobSeekerId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(x => x.Counsellor).WithMany().HasForeignKey(x => x.CounsellorId).OnDelete(DeleteBehavior.NoAction);
+            });
+        }
+
+        private static void ConfigureRecommendationBase<T>(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<T> entity) where T : class
+        {
+            entity.Property<string>("JobSeekerId").HasColumnName("job_seeker_id").HasMaxLength(450);
+            entity.Property<string?>("CounsellorId").HasColumnName("counsellor_id").HasMaxLength(450);
+            entity.Property<string?>("RequestMessage").HasColumnName("request_message").HasColumnType("nvarchar(max)");
+            entity.Property<string>("RecommendationSource").HasColumnName("recommendation_source").HasDefaultValue("COUNSELLOR");
+            entity.Property<string>("RecommendationStatus").HasColumnName("recommendation_status").HasDefaultValue("NEW");
+            ConfigureTimestamps(entity);
+        }
+
+        private static void ConfigureTimestamps<T>(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<T> entity) where T : class
+        {
+            entity.Property<DateTime>("CreatedAt").HasColumnName("created_at").HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.Property<DateTime>("UpdatedAt").HasColumnName("updated_at").HasDefaultValueSql("CURRENT_TIMESTAMP");
         }
     }
 }

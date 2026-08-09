@@ -89,6 +89,8 @@ using (var scope = app.Services.CreateScope())
 
         await IdentitySeeder.SeedAdminUserAsync(
             scope.ServiceProvider);
+
+        await CareerCounsellorSeeder.SeedRequestsAsync(scope.ServiceProvider);
     }
     catch (Exception ex)
     {

@@ -364,7 +364,33 @@ namespace JobSeeker.Controllers
         public IActionResult Employer() => View();
 
         [Authorize(Roles = UserRoles.CareerCounsellor)]
-        public IActionResult CareerCounsellor() => View();
+        public async Task<IActionResult> CareerCounsellor()
+        {
+            var viewModel = new CareerCounsellorHomeViewModel
+            {
+                ResumeReviewCount = await _context.ResumeFeedback.CountAsync(),
+                CareerRecommendationCount = await _context.CareerRecommendations.CountAsync(),
+                SkillRecommendationCount = await _context.SkillRecommendations.CountAsync(),
+                CertificationRecommendationCount = await _context.CertificationRecommendations.CountAsync(),
+                RecentResumeReviews = await _context.ResumeFeedback
+                    .AsNoTracking()
+                    .Include(review => review.Resume)
+                        .ThenInclude(resume => resume.JobSeekerProfile)
+                        .ThenInclude(profile => profile.User)
+                    .OrderByDescending(review => review.UpdatedAt)
+                    .Take(5)
+                    .Select(review => new RecentResumeReviewViewModel
+                    {
+                        JobSeekerName = review.Resume.JobSeekerProfile.User.FullName,
+                        ResumeTitle = review.Resume.ResumeTitle ?? "Untitled resume",
+                        FeedbackStatus = review.FeedbackStatus,
+                        UpdatedAt = review.UpdatedAt
+                    })
+                    .ToListAsync()
+            };
+
+            return View(viewModel);
+        }
 
         [Authorize(Roles = UserRoles.Administrator)]
         public IActionResult Administrator() => View();

@@ -1,559 +1,90 @@
-﻿@{
+@model JobSeeker.Models.CareerRecommendation
+
+@{
     ViewData["Title"] = "Career Recommendation";
+    var readOnly = Model.RecommendationStatus == "COMPLETED";
 }
 
-<head>
-    <link rel="stylesheet" href="~/css/Counsellor.css" />
-</head>
+<link rel="stylesheet" href="~/css/Counsellor.css" />
 
 <div class="container py-4">
-
-    <div id="pageMessage"></div>
-
-    <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white border-0 px-4 pt-4 d-flex justify-content-between align-items-center">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
             <h1 class="h3 mb-1">Career Recommendation</h1>
-            <a asp-controller="CareerCounsellor"
-               asp-action="CareerReview"
-               class="btn-close">
-            </a>
+            <p class="text-muted mb-0">Prepare career guidance for the job seeker.</p>
         </div>
+        <a asp-action="CareerReview" class="btn btn-outline-secondary">Back</a>
+    </div>
 
-        <div class="card-body p-4">
-            <div class="row g-3 mb-4">
-                <div class="col-md-6">
-                    <label class="form-label fw-semibold">
-                        Job Seeker
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <strong>@Model.JobSeeker.User.FullName</strong>
+            <span class="badge bg-secondary ms-2">
+                @Model.RecommendationStatus.Replace("_", " ")
+            </span>
+            <p class="mt-3 mb-0">@Model.RequestMessage</p>
+        </div>
+    </div>
+
+    <form asp-action="SaveCareerRecommendation" method="post" class="card shadow-sm">
+        <div class="card-body">
+            <input asp-for="CareerRecommendationId" type="hidden" />
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="RecommendedJobTitle" class="form-label">
+                        Recommended Job Title
                     </label>
-
-                    <div id="displayJobSeeker"
-                         class="form-control bg-light">
-                    </div>
+                    <input asp-for="RecommendedJobTitle"
+                           class="form-control"
+                           required
+                           disabled="@readOnly" />
                 </div>
-
-                <div class="col-md-3">
-                    <label class="form-label fw-semibold">
-                        Request Status
+                <div class="col-md-6 mb-3">
+                    <label asp-for="RecommendedIndustry" class="form-label">
+                        Recommended Industry
                     </label>
-
-                    <div id="displayStatus"
-                         class="form-control bg-light">
-                    </div>
-                </div>
-
-                <div class="col-md-3">
-                    <label class="form-label fw-semibold">
-                        Submitted Date
-                    </label>
-
-                    <div id="displaySubmittedDate"
-                         class="form-control bg-light">
-                    </div>
-                </div>
-
-                <div class="col-12">
-                    <label class="form-label fw-semibold">
-                        Request Message
-                    </label>
-
-                    <div id="displayRequestMessage"
-                         class="form-control bg-light"
-                         style="min-height: 80px;">
-                    </div>
+                    <input asp-for="RecommendedIndustry"
+                           class="form-control"
+                           disabled="@readOnly" />
                 </div>
             </div>
 
-            <hr class="mb-4" />
+            <div class="mb-3">
+                <label asp-for="RecommendationReason" class="form-label">
+                    Recommendation Reason
+                </label>
+                <textarea asp-for="RecommendationReason"
+                          class="form-control"
+                          rows="5"
+                          required
+                          disabled="@readOnly"></textarea>
+            </div>
 
-            <form id="careerRecommendationForm">
-                <input type="hidden"
-                       id="careerRecommendationId" />
-
-                <input type="hidden"
-                       id="jobSeekerId" />
-
-                <input type="hidden"
-                       id="counsellorId" />
-
-                <input type="hidden"
-                       id="recommendationSource"
-                       value="COUNSELLOR" />
-
-                <input type="hidden"
-                       id="recommendationStatus"
-                       value="IN_PROGRESS" />
-
-                <div class="row g-4">
-                    <div class="col-md-6">
-                        <label for="recommendedJobTitle"
-                               class="form-label fw-semibold">
-                            Recommended Job Title
-                            <span class="text-danger">*</span>
-                        </label>
-
-                        <input type="text"
-                               id="recommendedJobTitle"
-                               class="form-control"
-                               maxlength="200"
-                               placeholder="Example: Business Analyst"
-                               required />
-                    </div>
-
-                    <div class="col-md-6">
-                        <label for="recommendedIndustry"
-                               class="form-label fw-semibold">
-                            Recommended Industry
-                        </label>
-
-                        <input type="text"
-                               id="recommendedIndustry"
-                               class="form-control"
-                               maxlength="150"
-                               placeholder="Example: Information Technology" />
-                    </div>
-
-                    <div class="col-12">
-                        <label for="recommendationReason"
-                               class="form-label fw-semibold">
-                            Recommendation Reason
-                            <span class="text-danger">*</span>
-                        </label>
-
-                        <textarea id="recommendationReason"
-                                  class="form-control"
-                                  rows="5"
-                                  placeholder="Explain why this career is suitable for the job seeker."
-                                  required></textarea>
-                    </div>
-
-                    <div class="col-12">
-                        <label for="requiredImprovements"
-                               class="form-label fw-semibold">
-                            Required Improvements
-                        </label>
-
-                        <textarea id="requiredImprovements"
-                                  class="form-control"
-                                  rows="5"
-                                  placeholder="Describe the skills, qualifications or experience the job seeker should improve."></textarea>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">
-                            Recommendation Source
-                        </label>
-
-                        <input type="text"
-                               class="form-control bg-light"
-                               value="Career Counsellor"
-                               readonly />
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">
-                            Last Updated
-                        </label>
-
-                        <input type="text"
-                               id="displayUpdatedDate"
-                               class="form-control bg-light"
-                               readonly />
-                    </div>
-                </div>
-
-                <div class="d-flex flex-wrap justify-content-end
-                    gap-2 mt-4">
-
-                    <button type="button"
-                            id="saveDraftButton"
-                            class="btn btn-outline-primary">
-                        Save Draft
-                    </button>
-
-                    <button type="submit"
-                            id="completeButton"
-                            class="btn btn-primary">
-                        Complete Recommendation
-                    </button>
-                </div>
-            </form>
+            <div class="mb-3">
+                <label asp-for="RequiredImprovements" class="form-label">
+                    Required Improvements
+                </label>
+                <textarea asp-for="RequiredImprovements"
+                          class="form-control"
+                          rows="5"
+                          disabled="@readOnly"></textarea>
+            </div>
         </div>
-    </div>
+
+        @if (!readOnly)
+        {
+            <div class="card-footer d-flex justify-content-end gap-2">
+                <button name="command"
+                        value="draft"
+                        class="btn btn-outline-primary"
+                        formnovalidate>
+                    Save Draft
+                </button>
+                <button name="command" value="complete" class="btn btn-primary">
+                    Complete Recommendation
+                </button>
+            </div>
+        }
+    </form>
 </div>
-
-@section Scripts {
-    <script>
-        const requestStorageKey = "careerRecommendationRequests";
-        const draftStorageKey = "careerRecommendationDrafts";
-
-        const queryParameters =
-            new URLSearchParams(window.location.search);
-
-        const requestId =
-            Number(queryParameters.get("requestId"));
-
-        let requests = [];
-        let drafts = {};
-        let selectedRequest = null;
-
-        document.addEventListener("DOMContentLoaded", function() {
-            loadStoredData();
-
-            selectedRequest = requests.find(
-                function(item) {
-                    return item.id === requestId;
-                }
-            );
-
-            if (!selectedRequest) {
-                showPageError(
-                    "The selected career request could not be found."
-                );
-
-                document
-                    .getElementById("careerRecommendationForm")
-                    .classList.add("d-none");
-
-                return;
-            }
-
-            displayRequestInformation();
-            loadRecommendation();
-
-            if (selectedRequest.status === "COMPLETED") {
-                setReadOnlyMode();
-            }
-        });
-
-        function loadStoredData() {
-            requests = JSON.parse(
-                localStorage.getItem(requestStorageKey) || "[]"
-            );
-
-            drafts = JSON.parse(
-                localStorage.getItem(draftStorageKey) || "{}"
-            );
-        }
-
-        function displayRequestInformation() {
-            document.getElementById(
-                "careerRecommendationId"
-            ).value = selectedRequest.id;
-
-            document.getElementById(
-                "jobSeekerId"
-            ).value = selectedRequest.jobSeekerId;
-
-            document.getElementById(
-                "counsellorId"
-            ).value = selectedRequest.counsellorId || "";
-
-            document.getElementById(
-                "displayJobSeeker"
-            ).textContent = selectedRequest.jobSeeker;
-
-            document.getElementById(
-                "displayStatus"
-            ).textContent =
-                formatStatus(selectedRequest.status);
-
-            document.getElementById(
-                "displaySubmittedDate"
-            ).textContent =
-                formatDate(selectedRequest.submittedDate);
-
-            document.getElementById(
-                "displayRequestMessage"
-            ).textContent =
-                selectedRequest.requestMessage;
-
-            document.getElementById(
-                "displayUpdatedDate"
-            ).value = formatDate(
-                selectedRequest.updatedDate ||
-                selectedRequest.submittedDate
-            );
-        }
-
-        function loadRecommendation() {
-            const storedRecommendation = drafts[requestId];
-
-            const recommendation =
-                storedRecommendation || selectedRequest;
-
-            document.getElementById(
-                "recommendedJobTitle"
-            ).value =
-                recommendation.recommendedJobTitle || "";
-
-            document.getElementById(
-                "recommendedIndustry"
-            ).value =
-                recommendation.recommendedIndustry || "";
-
-            document.getElementById(
-                "recommendationReason"
-            ).value =
-                recommendation.recommendationReason || "";
-
-            document.getElementById(
-                "requiredImprovements"
-            ).value =
-                recommendation.requiredImprovements || "";
-
-            document.getElementById(
-                "recommendationSource"
-            ).value =
-                recommendation.recommendationSource ||
-                "COUNSELLOR";
-
-            document.getElementById(
-                "recommendationStatus"
-            ).value =
-                selectedRequest.status;
-        }
-
-        document
-            .getElementById("saveDraftButton")
-            .addEventListener("click", function() {
-                const draft = readFormValues();
-
-                draft.status = "IN_PROGRESS";
-                drafts[requestId] = draft;
-
-                localStorage.setItem(
-                    draftStorageKey,
-                    JSON.stringify(drafts)
-                );
-
-                updateRequestFromForm(
-                    draft,
-                    "IN_PROGRESS"
-                );
-
-                showSuccessMessage(
-                    "The career recommendation draft was saved."
-                );
-
-                window.scrollTo({
-                    top: 0,
-                    behavior: 'smooth'
-                });
-            });
-
-        document
-            .getElementById("careerRecommendationForm")
-            .addEventListener("submit", function(event) {
-                event.preventDefault();
-
-                if (!this.checkValidity()) {
-                    this.reportValidity();
-                    return;
-                }
-
-                const completedRecommendation =
-                    readFormValues();
-
-                completedRecommendation.status = "COMPLETED";
-
-                drafts[requestId] =
-                    completedRecommendation;
-
-                localStorage.setItem(
-                    draftStorageKey,
-                    JSON.stringify(drafts)
-                );
-
-                updateRequestFromForm(
-                    completedRecommendation,
-                    "COMPLETED"
-                );
-
-                window.location.href =
-                    "/CareerCounsellor/CareerReview";
-            });
-
-        function readFormValues() {
-            return {
-                careerRecommendationId: requestId,
-
-                jobSeekerId:
-                    document.getElementById(
-                        "jobSeekerId"
-                    ).value,
-
-                counsellorId:
-                    document.getElementById(
-                        "counsellorId"
-                    ).value || null,
-
-                requestMessage:
-                    selectedRequest.requestMessage,
-
-                recommendedJobTitle:
-                    document.getElementById(
-                        "recommendedJobTitle"
-                    ).value.trim(),
-
-                recommendedIndustry:
-                    document.getElementById(
-                        "recommendedIndustry"
-                    ).value.trim(),
-
-                recommendationReason:
-                    document.getElementById(
-                        "recommendationReason"
-                    ).value.trim(),
-
-                requiredImprovements:
-                    document.getElementById(
-                        "requiredImprovements"
-                    ).value.trim(),
-
-                recommendationSource:
-                    document.getElementById(
-                        "recommendationSource"
-                    ).value,
-
-                createdAt:
-                    selectedRequest.submittedDate,
-
-                updatedAt:
-                    new Date().toISOString()
-            };
-        }
-
-        function updateRequestFromForm(
-            recommendation,
-            status
-        ) {
-            const request = requests.find(
-                function(item) {
-                    return item.id === requestId;
-                }
-            );
-
-            if (!request) {
-                return;
-            }
-
-            request.recommendedJobTitle =
-                recommendation.recommendedJobTitle;
-
-            request.recommendedIndustry =
-                recommendation.recommendedIndustry;
-
-            request.recommendationReason =
-                recommendation.recommendationReason;
-
-            request.requiredImprovements =
-                recommendation.requiredImprovements;
-
-            request.recommendationSource =
-                recommendation.recommendationSource;
-
-            request.status = status;
-
-            request.updatedDate =
-                new Date().toISOString().split("T")[0];
-
-            localStorage.setItem(
-                requestStorageKey,
-                JSON.stringify(requests)
-            );
-
-            selectedRequest = request;
-
-            document.getElementById(
-                "recommendationStatus"
-            ).value = status;
-
-            document.getElementById(
-                "displayStatus"
-            ).textContent = formatStatus(status);
-
-            document.getElementById(
-                "displayUpdatedDate"
-            ).value = formatDate(request.updatedDate);
-        }
-
-        function setReadOnlyMode() {
-            const fields = document.querySelectorAll(
-                "#careerRecommendationForm input:not([type='hidden']), " +
-                "#careerRecommendationForm textarea"
-            );
-
-            fields.forEach(function(field) {
-                field.disabled = true;
-            });
-
-            document
-                .getElementById("saveDraftButton")
-                .classList.add("d-none");
-
-            document
-                .getElementById("completeButton")
-                .classList.add("d-none");
-        }
-
-        function showSuccessMessage(message) {
-            document.getElementById("pageMessage").innerHTML = `
-                        <div class="alert alert-success
-                                    alert-dismissible fade show">
-                            ${escapeHtml(message)}
-
-                            <button type="button"
-                                    class="btn-close"
-                                    data-bs-dismiss="alert"
-                                    aria-label="Close">
-                            </button>
-                        </div>
-                    `;
-        }
-
-        function showPageError(message) {
-            document.getElementById("pageMessage").innerHTML = `
-                        <div class="alert alert-danger">
-                            ${escapeHtml(message)}
-                        </div>
-                    `;
-        }
-
-        function formatStatus(status) {
-            if (status === "IN_PROGRESS") {
-                return "In Progress";
-            }
-
-            if (status === "COMPLETED") {
-                return "Completed";
-            }
-
-            if (status === "DISMISSED") {
-                return "Dismissed";
-            }
-
-            return "New";
-        }
-
-        function formatDate(dateValue) {
-            if (!dateValue) {
-                return "Not available";
-            }
-
-            return new Date(dateValue).toLocaleDateString(
-                "en-MY",
-                {
-                    day: "2-digit",
-                    month: "short",
-                    year: "numeric"
-                }
-            );
-        }
-
-        function escapeHtml(value) {
-            const element = document.createElement("div");
-            element.textContent = value ?? "";
-            return element.innerHTML;
-        }
-    </script>
-}
