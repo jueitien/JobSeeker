@@ -12,12 +12,15 @@ namespace JobSeeker.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<string>(
-                name: "ProfileImageS3Key",
-                table: "AspNetUsers",
-                type: "nvarchar(1024)",
-                maxLength: 1024,
-                nullable: true);
+            migrationBuilder.Sql(@"
+                IF NOT EXISTS (
+                    SELECT 1 FROM sys.columns
+                    WHERE object_id = OBJECT_ID(N'AspNetUsers')
+                    AND name = N'ProfileImageS3Key')
+                BEGIN
+                    ALTER TABLE AspNetUsers
+                    ADD ProfileImageS3Key nvarchar(1024) NULL;
+                END");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

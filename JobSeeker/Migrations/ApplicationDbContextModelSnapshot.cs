@@ -1392,6 +1392,7 @@ namespace JobSeeker.Migrations
                     b.Navigation("JobSeekerSkills");
 
                     b.Navigation("Resumes");
+                });
 
             modelBuilder.Entity("JobSeeker.Models.Job", b =>
                 {
