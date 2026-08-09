@@ -1,0 +1,41 @@
+
+.counsellor-status-filter {
+    width: 190px;
+}
+
+.counsellor-status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 116px;
+    height: 32px;
+    padding: 0 10px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.counsellor-action-group {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    width: 164px;
+    margin: 0 auto;
+}
+
+.counsellor-action-group form {
+    flex: 1 1 0;
+    margin: 0;
+}
+
+.counsellor-action-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 32px;
+    white-space: nowrap;
+}

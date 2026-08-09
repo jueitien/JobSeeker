@@ -30,9 +30,17 @@ namespace JobSeeker.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
+                    b.Property<string>("AccountStatus")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Email")
                         .HasMaxLength(256)
@@ -45,6 +53,9 @@ namespace JobSeeker.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("LastLoginAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("bit");
@@ -73,11 +84,18 @@ namespace JobSeeker.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
 
+                    b.Property<string>("ProfileImageS3Key")
+                        .HasMaxLength(1024)
+                        .HasColumnType("nvarchar(1024)");
+
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("bit");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("UserName")
                         .HasMaxLength(256)
@@ -94,6 +112,137 @@ namespace JobSeeker.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
+                });
+
+            modelBuilder.Entity("JobSeeker.Models.AuditLog", b =>
+                {
+                    b.Property<long>("AuditLogId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("AuditLogId"));
+
+                    b.Property<string>("ActionDescription")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ActionType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<long?>("EntityId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("EntityType")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(45)
+                        .HasColumnType("nvarchar(45)");
+
+                    b.Property<string>("UserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("AuditLogId");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("audit_logs", (string)null);
+                });
+
+            modelBuilder.Entity("JobSeeker.Models.CareerRecommendation", b =>
+                {
+                    b.Property<long>("CareerRecommendationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("career_recommendation_id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("CareerRecommendationId"));
+
+                    b.Property<string>("CounsellorId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)")
+                        .HasColumnName("counsellor_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("JobSeekerId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)")
+                        .HasColumnName("job_seeker_id");
+
+                    b.Property<string>("RecommendationReason")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("recommendation_reason");
+
+                    b.Property<string>("RecommendationSource")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)")
+                        .HasDefaultValue("COUNSELLOR")
+                        .HasColumnName("recommendation_source");
+
+                    b.Property<string>("RecommendationStatus")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)")
+                        .HasDefaultValue("NEW")
+                        .HasColumnName("recommendation_status");
+
+                    b.Property<string>("RecommendedIndustry")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)")
+                        .HasColumnName("recommended_industry");
+
+                    b.Property<string>("RecommendedJobTitle")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasColumnName("recommended_job_title");
+
+                    b.Property<string>("RequestMessage")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("request_message");
+
+                    b.Property<string>("RequiredImprovements")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("required_improvements");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.HasKey("CareerRecommendationId");
+
+                    b.HasIndex("CounsellorId");
+
+                    b.HasIndex("JobSeekerId");
+
+                    b.ToTable("career_recommendations", null, t =>
+                        {
+                            t.HasCheckConstraint("chk_career_recommendation_source", "[recommendation_source] IN ('SYSTEM','COUNSELLOR')");
+
+                            t.HasCheckConstraint("chk_career_recommendation_status", "[recommendation_status] IN ('NEW','IN_PROGRESS','COMPLETED','DISMISSED')");
+                        });
                 });
 
             modelBuilder.Entity("JobSeeker.Models.Certification", b =>
@@ -134,45 +283,104 @@ namespace JobSeeker.Migrations
                     b.ToTable("certifications", (string)null);
                 });
 
-            modelBuilder.Entity("JobSeeker.Models.CompanyDetail", b =>
+            modelBuilder.Entity("JobSeeker.Models.JobSeekerProfile", b =>
                 {
-                    b.Property<long>("CompanyDetailId")
+                    b.Property<string>("JobSeekerId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateOnly?>("AvailabilityDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("CareerObjective")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<decimal?>("ExpectedSalary")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("decimal(12,2)");
+
+                    b.Property<string>("ExperienceDescription")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FieldOfStudy")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int?>("GraduationYear")
+                        .HasColumnType("int");
+
+                    b.Property<string>("HighestQualification")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("PreferredJobTitle")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("PreferredLocation")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("ProfileDescription")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UniversityName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.HasKey("JobSeekerId");
+
+                    b.ToTable("job_seeker_profiles", (string)null);
+                });
+
+            modelBuilder.Entity("JobSeeker.Models.JobSeekerSkill", b =>
+                {
+                    b.Property<long>("JobSeekerSkillId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("CompanyDetailId"));
-
-                    b.Property<string>("Address")
-                        .IsRequired()
-                        .HasMaxLength(300)
-                        .HasColumnType("nvarchar(300)");
-
-                    b.Property<string>("CompanyName")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("JobSeekerSkillId"));
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<string>("EmployerId")
+                    b.Property<string>("JobSeekerId")
                         .IsRequired()
                         .HasMaxLength(450)
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                    b.Property<string>("ProficiencyLevel")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
 
-                    b.HasKey("CompanyDetailId");
+                    b.Property<long>("SkillId")
+                        .HasColumnType("bigint");
 
-                    b.HasIndex("EmployerId")
+                    b.HasKey("JobSeekerSkillId");
+
+                    b.HasIndex("SkillId");
+
+                    b.HasIndex("JobSeekerId", "SkillId")
                         .IsUnique();
 
-                    b.ToTable("company_details", (string)null);
+                    b.ToTable("job_seeker_skills", (string)null);
                 });
 
             modelBuilder.Entity("JobSeeker.Models.Job", b =>
@@ -192,6 +400,9 @@ namespace JobSeeker.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)")
                         .HasDefaultValue("APPROVED");
+
+                    b.Property<DateOnly?>("ApplicationDeadline")
+                        .HasColumnType("date");
 
                     b.Property<string>("CompanyName")
                         .IsRequired()
@@ -255,6 +466,9 @@ namespace JobSeeker.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
 
+                    b.Property<string>("RejectionReason")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Responsibilities")
                         .HasColumnType("nvarchar(max)");
 
@@ -271,7 +485,6 @@ namespace JobSeeker.Migrations
                         .HasColumnType("nvarchar(30)");
 
                     b.HasKey("JobId");
-
                     b.HasIndex("EmployerId");
 
                     b.HasIndex("Location");
@@ -513,6 +726,76 @@ namespace JobSeeker.Migrations
                     b.ToTable("resumes", (string)null);
                 });
 
+            modelBuilder.Entity("JobSeeker.Models.ResumeFeedback", b =>
+                {
+                    b.Property<long>("ResumeFeedbackId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("resume_feedback_id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("ResumeFeedbackId"));
+
+                    b.Property<string>("CounsellorId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)")
+                        .HasColumnName("counsellor_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("FeedbackStatus")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)")
+                        .HasDefaultValue("NEW")
+                        .HasColumnName("feedback_status");
+
+                    b.Property<string>("OverallComment")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("overall_comment");
+
+                    b.Property<string>("RecommendedChanges")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("recommended_changes");
+
+                    b.Property<string>("RequestMessage")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("request_message");
+
+                    b.Property<long>("ResumeId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("resume_id");
+
+                    b.Property<string>("Strengths")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("strengths");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("Weaknesses")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("weaknesses");
+
+                    b.HasKey("ResumeFeedbackId");
+
+                    b.HasIndex("CounsellorId");
+
+                    b.HasIndex("ResumeId");
+
+                    b.ToTable("resume_feedback", null, t =>
+                        {
+                            t.HasCheckConstraint("chk_feedback_status", "[feedback_status] IN ('NEW','IN_PROGRESS','COMPLETED','DISMISSED')");
+                        });
+                });
+
             modelBuilder.Entity("JobSeeker.Models.Skill", b =>
                 {
                     b.Property<long>("SkillId")
@@ -537,6 +820,145 @@ namespace JobSeeker.Migrations
                         .IsUnique();
 
                     b.ToTable("skills", (string)null);
+                });
+
+            modelBuilder.Entity("JobSeeker.Models.SkillRecommendation", b =>
+                {
+                    b.Property<long>("SkillRecommendationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("skill_recommendation_id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("SkillRecommendationId"));
+
+                    b.Property<string>("CounsellorId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)")
+                        .HasColumnName("counsellor_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("JobSeekerId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)")
+                        .HasColumnName("job_seeker_id");
+
+                    b.Property<string>("PriorityLevel")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("MEDIUM")
+                        .HasColumnName("priority_level");
+
+                    b.Property<string>("RecommendationReason")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("recommendation_reason");
+
+                    b.Property<string>("RecommendationSource")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)")
+                        .HasDefaultValue("COUNSELLOR")
+                        .HasColumnName("recommendation_source");
+
+                    b.Property<string>("RecommendationStatus")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)")
+                        .HasDefaultValue("NEW")
+                        .HasColumnName("recommendation_status");
+
+                    b.Property<string>("RecommendedSkill")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("recommended_skill");
+
+                    b.Property<string>("RequestMessage")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("request_message");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.HasKey("SkillRecommendationId");
+
+                    b.HasIndex("CounsellorId");
+
+                    b.HasIndex("JobSeekerId");
+
+                    b.ToTable("skill_recommendations", null, t =>
+                        {
+                            t.HasCheckConstraint("chk_skill_priority", "[priority_level] IN ('LOW','MEDIUM','HIGH')");
+
+                            t.HasCheckConstraint("chk_skill_recommendation_source", "[recommendation_source] IN ('SYSTEM','COUNSELLOR')");
+
+                            t.HasCheckConstraint("chk_skill_recommendation_status", "[recommendation_status] IN ('NEW','IN_PROGRESS','COMPLETED','DISMISSED')");
+                        });
+                });
+
+            modelBuilder.Entity("JobSeeker.Models.SystemReport", b =>
+                {
+                    b.Property<long>("SystemReportId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("SystemReportId"));
+
+                    b.Property<string>("FileContentType")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<long?>("FileSizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("GeneratedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("GeneratedBy")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("OriginalFileName")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("ReportName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("ReportParameters")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ReportS3Key")
+                        .HasMaxLength(1024)
+                        .HasColumnType("nvarchar(1024)");
+
+                    b.Property<string>("ReportType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("SystemReportId");
+
+                    b.HasIndex("GeneratedAt");
+
+                    b.HasIndex("GeneratedBy");
+
+                    b.ToTable("system_reports", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -672,6 +1094,34 @@ namespace JobSeeker.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("JobSeeker.Models.AuditLog", b =>
+                {
+                    b.HasOne("JobSeeker.Models.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("JobSeeker.Models.CareerRecommendation", b =>
+                {
+                    b.HasOne("JobSeeker.Models.ApplicationUser", "Counsellor")
+                        .WithMany()
+                        .HasForeignKey("CounsellorId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("JobSeeker.Models.JobSeekerProfile", "JobSeeker")
+                        .WithMany("CareerRecommendations")
+                        .HasForeignKey("JobSeekerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Counsellor");
+
+                    b.Navigation("JobSeeker");
+                });
+
             modelBuilder.Entity("JobSeeker.Models.Certification", b =>
                 {
                     b.HasOne("JobSeeker.Models.JobSeekerProfile", "JobSeekerProfile")
@@ -683,23 +1133,49 @@ namespace JobSeeker.Migrations
                     b.Navigation("JobSeekerProfile");
                 });
 
-            modelBuilder.Entity("JobSeeker.Models.CompanyDetail", b =>
+            modelBuilder.Entity("JobSeeker.Models.JobSeekerProfile", b =>
                 {
-                    b.HasOne("JobSeeker.Models.ApplicationUser", "Employer")
-                        .WithOne("CompanyDetail")
-                        .HasForeignKey("JobSeeker.Models.CompanyDetail", "EmployerId")
+                    b.HasOne("JobSeeker.Models.ApplicationUser", "User")
+                        .WithOne("JobSeekerProfile")
+                        .HasForeignKey("JobSeeker.Models.JobSeekerProfile", "JobSeekerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Employer");
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("JobSeeker.Models.JobSeekerSkill", b =>
+                {
+                    b.HasOne("JobSeeker.Models.JobSeekerProfile", "JobSeekerProfile")
+                        .WithMany("JobSeekerSkills")
+                        .HasForeignKey("JobSeekerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("JobSeeker.Models.Skill", "Skill")
+                        .WithMany("JobSeekerSkills")
+                        .HasForeignKey("SkillId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("JobSeekerProfile");
+
+                    b.Navigation("Skill");
                 });
 
             modelBuilder.Entity("JobSeeker.Models.Job", b =>
                 {
+                    b.HasOne("JobSeeker.Models.ApplicationUser", "Approver")
+                        .WithMany()
+                        .HasForeignKey("ApprovedBy")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("JobSeeker.Models.ApplicationUser", "Employer")
                         .WithMany()
                         .HasForeignKey("EmployerId")
                         .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Approver");
 
                     b.Navigation("Employer");
                 });
@@ -791,6 +1267,53 @@ namespace JobSeeker.Migrations
                     b.Navigation("JobSeekerProfile");
                 });
 
+            modelBuilder.Entity("JobSeeker.Models.ResumeFeedback", b =>
+                {
+                    b.HasOne("JobSeeker.Models.ApplicationUser", "Counsellor")
+                        .WithMany()
+                        .HasForeignKey("CounsellorId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("JobSeeker.Models.Resume", "Resume")
+                        .WithMany("FeedbackRequests")
+                        .HasForeignKey("ResumeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Counsellor");
+
+                    b.Navigation("Resume");
+                });
+
+            modelBuilder.Entity("JobSeeker.Models.SkillRecommendation", b =>
+                {
+                    b.HasOne("JobSeeker.Models.ApplicationUser", "Counsellor")
+                        .WithMany()
+                        .HasForeignKey("CounsellorId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("JobSeeker.Models.JobSeekerProfile", "JobSeeker")
+                        .WithMany("SkillRecommendations")
+                        .HasForeignKey("JobSeekerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Counsellor");
+
+                    b.Navigation("JobSeeker");
+                });
+
+            modelBuilder.Entity("JobSeeker.Models.SystemReport", b =>
+                {
+                    b.HasOne("JobSeeker.Models.ApplicationUser", "Generator")
+                        .WithMany()
+                        .HasForeignKey("GeneratedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Generator");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -858,6 +1381,10 @@ namespace JobSeeker.Migrations
 
             modelBuilder.Entity("JobSeeker.Models.JobSeekerProfile", b =>
                 {
+                    b.Navigation("CareerRecommendations");
+
+                    b.Navigation("CertificationRecommendations");
+
                     b.Navigation("Certifications");
 
                     b.Navigation("JobApplications");
@@ -865,10 +1392,17 @@ namespace JobSeeker.Migrations
                     b.Navigation("JobSeekerSkills");
 
                     b.Navigation("Resumes");
+
+            modelBuilder.Entity("JobSeeker.Models.Job", b =>
+                {
+                    b.Navigation("Applications");
+                    b.Navigation("RequiredSkills");
                 });
 
             modelBuilder.Entity("JobSeeker.Models.Resume", b =>
                 {
+                    b.Navigation("FeedbackRequests");
+
                     b.Navigation("JobApplications");
                 });
 

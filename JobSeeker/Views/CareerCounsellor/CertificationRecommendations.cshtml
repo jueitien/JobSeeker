@@ -1,0 +1,95 @@
+@model JobSeeker.Models.CertificationRecommendation
+
+@{
+    ViewData["Title"] = "Certification Recommendation";
+    var readOnly = Model.RecommendationStatus == "COMPLETED";
+}
+
+<link rel="stylesheet" href="~/css/Counsellor.css" />
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">Certification Recommendation</h1>
+            <p class="text-muted mb-0">
+                Prepare certification guidance for the job seeker.
+            </p>
+        </div>
+        <a asp-action="CertificationReview" class="btn btn-outline-secondary">Back</a>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <strong>@Model.JobSeeker.User.FullName</strong>
+            <span class="badge bg-secondary ms-2">
+                @Model.RecommendationStatus.Replace("_", " ")
+            </span>
+            <p class="mt-3 mb-0">@Model.RequestMessage</p>
+        </div>
+    </div>
+
+    <form asp-action="SaveCertificationRecommendation" method="post" class="card shadow-sm">
+        <div class="card-body">
+            <input asp-for="CertificationRecommendationId" type="hidden" />
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="CertificationName" class="form-label">
+                        Certification Name
+                    </label>
+                    <input asp-for="CertificationName"
+                           class="form-control"
+                           required
+                           disabled="@readOnly" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="IssuingOrganization" class="form-label">
+                        Issuing Organization
+                    </label>
+                    <input asp-for="IssuingOrganization"
+                           class="form-control"
+                           disabled="@readOnly" />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label asp-for="PriorityLevel" class="form-label">Priority</label>
+                    <select asp-for="PriorityLevel"
+                            class="form-select"
+                            disabled="@readOnly">
+                        <option>LOW</option>
+                        <option>MEDIUM</option>
+                        <option>HIGH</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="RecommendationReason" class="form-label">
+                    Recommendation Reason
+                </label>
+                <textarea asp-for="RecommendationReason"
+                          class="form-control"
+                          rows="6"
+                          required
+                          disabled="@readOnly"></textarea>
+            </div>
+        </div>
+
+        @if (!readOnly)
+        {
+            <div class="card-footer d-flex justify-content-end gap-2">
+                <button name="command"
+                        value="draft"
+                        class="btn btn-outline-primary"
+                        formnovalidate>
+                    Save Draft
+                </button>
+                <button name="command" value="complete" class="btn btn-primary">
+                    Complete Recommendation
+                </button>
+            </div>
+        }
+    </form>
+</div>

@@ -1,38 +1,52 @@
+@model JobSeeker.Models.ViewModels.Admin.UserManagementViewModel
 @{
     ViewData["Title"] = "Suspended Accounts";
 }
 
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show mb-3">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>Suspended Accounts</h2>
-    <a asp-controller="UserManagement" asp-action="Index"
-       class="btn btn-outline-secondary btn-sm">
+    <a asp-controller="UserManagement" asp-action="Index" class="btn btn-outline-secondary btn-sm">
         ← Back to All Users
     </a>
 </div>
 
 <!-- Filters -->
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-body">
-        <div class="row g-2">
-            <div class="col-md-5">
-                <input type="text" class="form-control" placeholder="Search by name or email..." />
-            </div>
-            <div class="col-md-4">
-                <select class="form-select">
-                    <option value="">All Roles</option>
-                    <option>Job Seeker</option>
-                    <option>Employer</option>
-                    <option>Career Counsellor</option>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <button class="btn btn-primary w-100">Search</button>
+<form method="get" asp-action="Suspended">
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-2">
+                <div class="col-md-5">
+                    <input type="text" name="keyword" value="@Model.SearchKeyword"
+                           class="form-control" placeholder="Search by name or email..." />
+                </div>
+                <div class="col-md-4">
+                    <select name="role" class="form-select">
+                        <option value="">All Roles</option>
+                        @foreach (var r in new[] { "Job Seeker", "Employer", "Career Counsellor" })
+                        {
+                            if (Model.FilterRole == r)
+                            { <option value="@r" selected>@r</option> }
+                            else
+                            { <option value="@r">@r</option> }
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary w-100">Search</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
+</form>
 
-<!-- Suspended Users Table -->
 <div class="card border-0 shadow-sm">
     <div class="card-body p-0">
         <div class="table-responsive">
@@ -43,29 +57,62 @@
                         <th>Name</th>
                         <th>Email</th>
                         <th>Role</th>
-                        <th>Suspended Since</th>
-                        <th>Reason</th>
+                        <th>Joined</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td colspan="7" class="text-center text-muted py-5">
-                            No suspended accounts found.
-                        </td>
-                    </tr>
+                    @if (!Model.Users.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-5">No suspended accounts found.</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        var i = 1;
+                        @foreach (var user in Model.Users)
+                        {
+                            var initials = string.Join("", user.FullName.Split(' ').Take(2).Select(w => w.FirstOrDefault()));
+                            <tr>
+                                <td>@(i++)</td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center text-white"
+                                             style="width:36px;height:36px;font-size:13px;">
+                                            @initials.ToString().ToUpper()
+                                        </div>
+                                        <span>@user.FullName</span>
+                                    </div>
+                                </td>
+                                <td>@user.Email</td>
+                                <td><span class="badge bg-secondary">@user.Role</span></td>
+                                <td>@user.CreatedAt.ToString("dd MMM yyyy")</td>
+                                <td>
+                                    <div class="d-flex gap-1">
+                                        <form asp-action="Activate" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@user.Id" />
+                                            <button type="submit" class="btn btn-sm btn-outline-success">Activate</button>
+                                        </form>
+                                        <form asp-action="Deactivate" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@user.Id" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                    onclick="return confirm('Permanently deactivate @user.FullName?')">
+                                                Deactivate
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
                 </tbody>
             </table>
         </div>
     </div>
-    <div class="card-footer bg-white d-flex justify-content-between align-items-center">
-        <span class="text-muted small">Showing 0 results</span>
-        <nav>
-            <ul class="pagination pagination-sm mb-0">
-                <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
-                <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                <li class="page-item disabled"><a class="page-link" href="#">Next</a></li>
-            </ul>
-        </nav>
+    <div class="card-footer bg-white">
+        <span class="text-muted small">Showing @Model.TotalCount suspended account(s)</span>
     </div>
 </div>

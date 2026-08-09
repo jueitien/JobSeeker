@@ -1,0 +1,102 @@
+@model IReadOnlyList<JobSeeker.Models.CareerRecommendation>
+
+@{
+    ViewData["Title"] = "Career Recommendation Requests";
+}
+
+<link rel="stylesheet" href="~/css/Counsellor.css" />
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-end mb-4">
+        <div>
+            <h1 class="h3 mb-1">Career Recommendation Requests</h1>
+        </div>
+        <div class="counsellor-status-filter">
+            <select id="statusFilter" class="form-select" aria-label="Filter requests by status">
+                <option value="ALL">All</option>
+                <option value="NEW">New</option>
+                <option value="IN_PROGRESS">In Progress</option>
+                <option value="COMPLETED">Completed</option>
+                <option value="DISMISSED">Dismissed</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0" id="requestTable">
+                <thead>
+                    <tr>
+                        <th>Job Seeker</th>
+                        <th>Request</th>
+                        <th>Recommended Career</th>
+                        <th>Submitted</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        var badgeClass = item.RecommendationStatus switch
+                        {
+                            "COMPLETED" => "bg-success",
+                            "IN_PROGRESS" => "bg-info",
+                            "DISMISSED" => "bg-danger",
+                            _ => "bg-secondary"
+                        };
+
+                        <tr data-status="@item.RecommendationStatus">
+                            <td>@item.JobSeeker.User.FullName</td>
+                            <td>@item.RequestMessage</td>
+                            <td>
+                                @(string.IsNullOrWhiteSpace(item.RecommendedJobTitle)
+                                    ? "Not prepared"
+                                    : item.RecommendedJobTitle)
+                            </td>
+                            <td>@item.CreatedAt.ToString("dd MMM yyyy")</td>
+                            <td class="text-center">
+                                <span class="badge counsellor-status-badge @badgeClass">
+                                    @item.RecommendationStatus.Replace("_", " ")
+                                </span>
+                            </td>
+                            <td>
+                                <div class="counsellor-action-group">
+                                    @if (item.RecommendationStatus == "NEW")
+                                    {
+                                        <form asp-action="UpdateStatus" method="post">
+                                            <input type="hidden" name="recordType" value="career" />
+                                            <input type="hidden" name="id" value="@item.CareerRecommendationId" />
+                                            <input type="hidden" name="status" value="IN_PROGRESS" />
+                                            <button class="btn btn-sm btn-primary counsellor-action-button">Accept</button>
+                                        </form>
+                                        <form asp-action="UpdateStatus" method="post">
+                                            <input type="hidden" name="recordType" value="career" />
+                                            <input type="hidden" name="id" value="@item.CareerRecommendationId" />
+                                            <input type="hidden" name="status" value="DISMISSED" />
+                                            <button class="btn btn-sm btn-outline-danger counsellor-action-button">Decline</button>
+                                        </form>
+                                    }
+                                    else if (item.RecommendationStatus != "DISMISSED")
+                                    {
+                                        <a asp-action="CareerRecommendations"
+                                           asp-route-requestId="@item.CareerRecommendationId"
+                                           class="btn btn-sm btn-outline-primary counsellor-action-button">
+                                            @(item.RecommendationStatus == "COMPLETED" ? "View" : "Continue")
+                                        </a>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        @if (Model.Count == 0)
+        {
+            <div class="p-5 text-center text-muted">No database records are available.</div>
+        }
+    </div>
+</div>
+
+<script src="~/js/counsellor.js"></script>

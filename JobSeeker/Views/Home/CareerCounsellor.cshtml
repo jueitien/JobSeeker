@@ -1,8 +1,72 @@
-﻿@{
+@model JobSeeker.Models.ViewModels.CareerCounsellorHomeViewModel
+
+@{
     ViewData["Title"] = "Career Counsellor Home";
 }
 
-<h1>Career Counsellor Home</h1>
-<p>Welcome, @User.Identity?.Name.</p>
+<div class="container py-4">
+    <div class="mb-4">
+        <h1 class="h3">Career Counsellor Dashboard</h1>
+        <p class="text-muted mb-0">
+            Review recent counselling activities and recommendations.
+        </p>
+    </div>
 
-<p>Review job seekers and provide career and skills recommendations.</p>
+    <div class="row g-3 mb-5">
+        <div class="col-sm-6 col-xl-3">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <p class="text-muted mb-2">Resume Reviews</p>
+                    <h2 class="display-6 fw-semibold">@Model.ResumeReviewCount</h2>
+                    <a asp-controller="CareerCounsellor"
+                       asp-action="ResumeReview"
+                       class="btn btn-sm btn-outline-primary">
+                        View Reviews
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <p class="text-muted mb-2">Career Recommendations</p>
+                    <h2 class="display-6 fw-semibold">@Model.CareerRecommendationCount</h2>
+                    <a asp-controller="CareerCounsellor"
+                       asp-action="CareerReview"
+                       class="btn btn-sm btn-outline-primary">
+                        View Recommendations
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <p class="text-muted mb-2">Skill Recommendations</p>
+                    <h2 class="display-6 fw-semibold">@Model.SkillRecommendationCount</h2>
+                    <a asp-controller="CareerCounsellor"
+                       asp-action="SkillReview"
+                       class="btn btn-sm btn-outline-primary">
+                        View Recommendations
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <p class="text-muted mb-2">Certification Recommendations</p>
+                    <h2 class="display-6 fw-semibold">@Model.CertificationRecommendationCount</h2>
+                    <a asp-controller="CareerCounsellor"
+                       asp-action="CertificationReview"
+                       class="btn btn-sm btn-outline-primary">
+                        View Recommendations
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

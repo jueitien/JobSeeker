@@ -53,5 +53,9 @@ namespace JobSeeker.Models
         public ICollection<JobSeekerSkill> JobSeekerSkills { get; set; } = new List<JobSeekerSkill>();
 
         public ICollection<JobApplication> JobApplications { get; set; } = new List<JobApplication>();
+
+        public ICollection<CareerRecommendation> CareerRecommendations { get; set; } = new List<CareerRecommendation>();
+        public ICollection<SkillRecommendation> SkillRecommendations { get; set; } = new List<SkillRecommendation>();
+        public ICollection<CertificationRecommendation> CertificationRecommendations { get; set; } = new List<CertificationRecommendation>();
     }
 }

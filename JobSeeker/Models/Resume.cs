@@ -28,5 +28,7 @@ namespace JobSeeker.Models
         public JobSeekerProfile JobSeekerProfile { get; set; } = null!;
 
         public ICollection<JobApplication> JobApplications { get; set; } = new List<JobApplication>();
+
+        public ICollection<ResumeFeedback> FeedbackRequests { get; set; } = new List<ResumeFeedback>();
     }
 }

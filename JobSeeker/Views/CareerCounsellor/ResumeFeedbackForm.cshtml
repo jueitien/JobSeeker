@@ -1,0 +1,92 @@
+@model JobSeeker.Models.ResumeFeedback
+
+@{
+    ViewData["Title"] = "Provide Resume Feedback";
+    var readOnly = Model.FeedbackStatus == "COMPLETED";
+}
+
+<link rel="stylesheet" href="~/css/Counsellor.css" />
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">Resume Feedback</h1>
+            <p class="text-muted mb-0">
+                Provide structured feedback for the selected resume.
+            </p>
+        </div>
+        <a asp-action="ResumeReview" class="btn btn-outline-secondary">Back</a>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Job Seeker</dt>
+                <dd class="col-sm-9">@Model.Resume.JobSeekerProfile.User.FullName</dd>
+
+                <dt class="col-sm-3">Resume</dt>
+                <dd class="col-sm-9">@Model.Resume.ResumeTitle</dd>
+
+                <dt class="col-sm-3">Request</dt>
+                <dd class="col-sm-9">@Model.RequestMessage</dd>
+
+                <dt class="col-sm-3">Status</dt>
+                <dd class="col-sm-9">@Model.FeedbackStatus.Replace("_", " ")</dd>
+            </dl>
+        </div>
+    </div>
+
+    <form asp-action="SaveResumeFeedback" method="post" class="card shadow-sm">
+        <div class="card-body">
+            <input asp-for="ResumeFeedbackId" type="hidden" />
+
+            <div class="mb-3">
+                <label asp-for="OverallComment" class="form-label">Overall Comment</label>
+                <textarea asp-for="OverallComment"
+                          class="form-control"
+                          rows="4"
+                          disabled="@readOnly"></textarea>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Strengths" class="form-label"></label>
+                    <textarea asp-for="Strengths"
+                              class="form-control"
+                              rows="5"
+                              disabled="@readOnly"></textarea>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Weaknesses" class="form-label"></label>
+                    <textarea asp-for="Weaknesses"
+                              class="form-control"
+                              rows="5"
+                              disabled="@readOnly"></textarea>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="RecommendedChanges" class="form-label">
+                    Recommended Changes
+                </label>
+                <textarea asp-for="RecommendedChanges"
+                          class="form-control"
+                          rows="5"
+                          disabled="@readOnly"></textarea>
+            </div>
+        </div>
+
+        @if (!readOnly)
+        {
+            <div class="card-footer d-flex justify-content-end gap-2">
+                <button name="command" value="draft" class="btn btn-outline-primary">
+                    Save Draft
+                </button>
+                <button name="command" value="complete" class="btn btn-primary">
+                    Send Feedback
+                </button>
+            </div>
+        }
+    </form>
+</div>
