@@ -80,6 +80,31 @@ namespace JobSeeker.Controllers.Employer
 
             await _context.SaveChangesAsync();
 
+            // Keep employer_profiles in sync so admin can verify the employer.
+            var profile = await _context.EmployerProfiles
+                .FirstOrDefaultAsync(p => p.EmployerId == user.Id);
+
+            if (profile == null)
+            {
+                _context.EmployerProfiles.Add(new EmployerProfile
+                {
+                    EmployerId         = user.Id,
+                    CompanyName        = company.CompanyName,
+                    CompanyAddress     = company.Address,
+                    VerificationStatus = "PENDING",
+                    CreatedAt          = now,
+                    UpdatedAt          = now
+                });
+            }
+            else
+            {
+                profile.CompanyName    = company.CompanyName;
+                profile.CompanyAddress = company.Address;
+                profile.UpdatedAt      = now;
+            }
+
+            await _context.SaveChangesAsync();
+
             TempData["SuccessMessage"] = "Company details saved.";
             return RedirectToAction(nameof(Index));
         }
