@@ -65,6 +65,8 @@ namespace JobSeeker.Models
 
         public bool IsTestData { get; set; }
 
+        public bool IsReopenRequest { get; set; }
+
         public DateTime CreatedAt { get; set; }
 
         public DateTime UpdatedAt { get; set; }

@@ -159,6 +159,7 @@ namespace JobSeeker.Controllers.Employer
                 ApplicationDeadline = model.ApplicationDeadline,
                 ApprovalStatus = "PENDING",   // new postings must be approved by an Administrator
                 JobStatus = "OPEN",
+                IsReopenRequest = false,
                 IsTestData = false,
                 CreatedAt = now,
                 UpdatedAt = now
@@ -286,11 +287,22 @@ namespace JobSeeker.Controllers.Employer
 
             if (job == null) return NotFound();
 
+            var wasRejected = job.ApprovalStatus == "REJECTED";
+
             job.JobStatus = "OPEN";
+            // Re-submit for admin approval — a reopened rejected job must be reviewed again.
+            if (wasRejected)
+            {
+                job.ApprovalStatus   = "PENDING";
+                job.IsReopenRequest  = true;
+                job.RejectionReason  = null;
+            }
             job.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
-            TempData["SuccessMessage"] = $"\"{job.JobTitle}\" has been reopened.";
+            TempData["SuccessMessage"] = wasRejected
+                ? $"\"{job.JobTitle}\" has been resubmitted for admin approval."
+                : $"\"{job.JobTitle}\" has been reopened.";
             return RedirectToAction(nameof(Index));
         }
     }

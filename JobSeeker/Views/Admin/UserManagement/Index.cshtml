@@ -123,24 +123,13 @@
                                 <td>@user.CreatedAt.ToString("dd MMM yyyy")</td>
                                 <td>
                                     <div class="d-flex gap-1">
-                                        @if (user.AccountStatus != "SUSPENDED")
+                                        @if (user.AccountStatus == "ACTIVE")
                                         {
                                             <form asp-action="Suspend" method="post">
                                                 @Html.AntiForgeryToken()
                                                 <input type="hidden" name="id" value="@user.Id" />
                                                 <button type="submit" class="btn btn-sm btn-outline-warning">Suspend</button>
                                             </form>
-                                        }
-                                        else
-                                        {
-                                            <form asp-action="Activate" method="post">
-                                                @Html.AntiForgeryToken()
-                                                <input type="hidden" name="id" value="@user.Id" />
-                                                <button type="submit" class="btn btn-sm btn-outline-success">Activate</button>
-                                            </form>
-                                        }
-                                        @if (user.AccountStatus != "DEACTIVATED")
-                                        {
                                             <form asp-action="Deactivate" method="post">
                                                 @Html.AntiForgeryToken()
                                                 <input type="hidden" name="id" value="@user.Id" />
@@ -148,6 +137,30 @@
                                                         onclick="return confirm('Deactivate @user.FullName?')">
                                                     Deactivate
                                                 </button>
+                                            </form>
+                                        }
+                                        else if (user.AccountStatus == "SUSPENDED")
+                                        {
+                                            <form asp-action="Activate" method="post">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@user.Id" />
+                                                <button type="submit" class="btn btn-sm btn-outline-success">Activate</button>
+                                            </form>
+                                            <form asp-action="Deactivate" method="post">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@user.Id" />
+                                                <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                        onclick="return confirm('Deactivate @user.FullName?')">
+                                                    Deactivate
+                                                </button>
+                                            </form>
+                                        }
+                                        else if (user.AccountStatus == "DEACTIVATED")
+                                        {
+                                            <form asp-action="Activate" method="post">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@user.Id" />
+                                                <button type="submit" class="btn btn-sm btn-outline-success">Reactivate</button>
                                             </form>
                                         }
                                     </div>

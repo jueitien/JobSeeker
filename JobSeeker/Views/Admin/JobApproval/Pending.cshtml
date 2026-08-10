@@ -39,7 +39,14 @@
                                 <h5 class="mb-1">@job.JobTitle</h5>
                                 <div class="text-muted small">@job.CompanyName</div>
                             </div>
-                            <span class="badge bg-warning text-dark">Pending</span>
+                            @if (job.IsReopenRequest)
+                            {
+                                <span class="badge bg-info text-dark">Reopen Request</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning text-dark">New</span>
+                            }
                         </div>
                         <div class="d-flex flex-wrap gap-2 mb-3">
                             <span class="badge bg-light text-dark border">@job.EmploymentType</span>
@@ -71,12 +78,135 @@
                             <li><strong>Submitted:</strong> @job.CreatedAt.ToString("dd MMM yyyy")</li>
                         </ul>
                         <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary flex-fill"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#detailsModal-@job.JobId">
+                                View Details
+                            </button>
                             <form asp-action="Approve" method="post" class="flex-fill">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="id" value="@job.JobId" />
                                 <button type="submit" class="btn btn-sm btn-success w-100">Approve</button>
                             </form>
                             <button type="button" class="btn btn-sm btn-danger flex-fill"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#rejectJobModal-@job.JobId">
+                                Reject
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Details Modal -->
+            <div class="modal fade" id="detailsModal-@job.JobId" tabindex="-1">
+                <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <div>
+                                <h5 class="modal-title mb-0">@job.JobTitle</h5>
+                                <small class="text-muted">@job.CompanyName</small>
+                                @if (job.IsReopenRequest)
+                                {
+                                    <span class="badge bg-info text-dark ms-1">Reopen Request</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning text-dark ms-1">New</span>
+                                }
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+
+                            <!-- Badges -->
+                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                <span class="badge bg-light text-dark border">@job.EmploymentType</span>
+                                @if (!string.IsNullOrEmpty(job.WorkplaceType))
+                                {
+                                    <span class="badge bg-light text-dark border">@job.WorkplaceType</span>
+                                }
+                                @if (!string.IsNullOrEmpty(job.Location))
+                                {
+                                    <span class="badge bg-light text-dark border">@job.Location</span>
+                                }
+                            </div>
+
+                            <!-- Quick facts -->
+                            <div class="row row-cols-2 g-2 mb-4 small">
+                                <div class="col">
+                                    <strong>Salary</strong><br/>
+                                    @if (job.MinimumSalary.HasValue || job.MaximumSalary.HasValue)
+                                    {
+                                        @($"RM {job.MinimumSalary:N0} – RM {job.MaximumSalary:N0}")
+                                    }
+                                    else { <text>Not specified</text> }
+                                </div>
+                                <div class="col">
+                                    <strong>Vacancies</strong><br/>@job.VacancyCount
+                                </div>
+                                <div class="col">
+                                    <strong>Min. Experience</strong><br/>@job.MinimumExperienceYears year(s)
+                                </div>
+                                <div class="col">
+                                    <strong>Qualification</strong><br/>
+                                    @(string.IsNullOrEmpty(job.MinimumQualification) ? "Not specified" : job.MinimumQualification)
+                                </div>
+                                @if (!string.IsNullOrEmpty(job.PreferredFieldOfStudy))
+                                {
+                                    <div class="col">
+                                        <strong>Field of Study</strong><br/>@job.PreferredFieldOfStudy
+                                    </div>
+                                }
+                                @if (job.ApplicationDeadline.HasValue)
+                                {
+                                    <div class="col">
+                                        <strong>Deadline</strong><br/>@job.ApplicationDeadline.Value.ToString("dd MMM yyyy")
+                                    </div>
+                                }
+                            </div>
+
+                            <!-- Job Description -->
+                            @if (!string.IsNullOrEmpty(job.JobDescription))
+                            {
+                                <h6 class="fw-bold">Job Description</h6>
+                                <p class="small" style="white-space: pre-wrap;">@job.JobDescription</p>
+                            }
+
+                            <!-- Responsibilities -->
+                            @if (!string.IsNullOrEmpty(job.Responsibilities))
+                            {
+                                <h6 class="fw-bold mt-3">Responsibilities</h6>
+                                <p class="small" style="white-space: pre-wrap;">@job.Responsibilities</p>
+                            }
+
+                            <!-- Vacancy Images -->
+                            @if (job.VacancyImageIds.Any())
+                            {
+                                <h6 class="fw-bold mt-3">Vacancy Images</h6>
+                                <div class="d-flex flex-wrap gap-2">
+                                    @foreach (var imageId in job.VacancyImageIds)
+                                    {
+                                        <a href="@Url.Action("VacancyImage", "JobApproval", new { imageId })"
+                                           target="_blank" rel="noopener">
+                                            <img src="@Url.Action("VacancyImage", "JobApproval", new { imageId })"
+                                                 alt="Vacancy image"
+                                                 style="width:160px; height:110px; object-fit:cover; border-radius:6px; border:1px solid #dee2e6;"
+                                                 onerror="this.style.display='none'" />
+                                        </a>
+                                    }
+                                </div>
+                            }
+                        </div>
+                        <div class="modal-footer gap-2">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <form asp-action="Approve" method="post" class="m-0">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@job.JobId" />
+                                <button type="submit" class="btn btn-success">Approve</button>
+                            </form>
+                            <button type="button" class="btn btn-danger"
+                                    data-bs-dismiss="modal"
                                     data-bs-toggle="modal"
                                     data-bs-target="#rejectJobModal-@job.JobId">
                                 Reject

@@ -138,6 +138,25 @@ namespace JobSeeker.Controllers
                 return View(model);
             }
 
+            // Check account status BEFORE attempting sign-in.
+            // This way we never call SignOutAsync mid-request (which would
+            // invalidate the antiforgery cookie and cause HTTP 400).
+            if (user.AccountStatus == "SUSPENDED")
+            {
+                ModelState.AddModelError(
+                    string.Empty,
+                    "Your account has been suspended. Please contact support.");
+                return View(model);
+            }
+
+            if (user.AccountStatus == "DEACTIVATED")
+            {
+                ModelState.AddModelError(
+                    string.Empty,
+                    "This account has been deactivated.");
+                return View(model);
+            }
+
             var result =
                 await _signInManager.PasswordSignInAsync(
                     user,

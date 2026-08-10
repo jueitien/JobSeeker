@@ -1,6 +1,7 @@
 using JobSeeker.Data;
 using JobSeeker.Models;
 using JobSeeker.Models.ViewModels.Admin;
+using JobSeeker.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -13,13 +14,16 @@ namespace JobSeeker.Controllers.Admin
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly S3StorageService _s3Storage;
 
         public JobApprovalController(
             ApplicationDbContext context,
-            UserManager<ApplicationUser> userManager)
+            UserManager<ApplicationUser> userManager,
+            S3StorageService s3Storage)
         {
             _context = context;
             _userManager = userManager;
+            _s3Storage = s3Storage;
         }
 
         [HttpGet]
@@ -97,6 +101,7 @@ namespace JobSeeker.Controllers.Admin
             var query = _context.Jobs
                 .AsNoTracking()
                 .Include(j => j.Approver)
+                .Include(j => j.VacancyImages)
                 .Where(j => j.ApprovalStatus == approvalStatus);
 
             if (!string.IsNullOrWhiteSpace(keyword))
@@ -133,7 +138,18 @@ namespace JobSeeker.Controllers.Admin
                 RejectionReason    = j.RejectionReason,
                 ApprovedByName     = j.Approver?.FullName,
                 ApprovedAt         = j.ApprovedAt,
-                CreatedAt          = j.CreatedAt
+                CreatedAt          = j.CreatedAt,
+                JobDescription     = j.JobDescription,
+                Responsibilities   = j.Responsibilities,
+                MinimumQualification     = j.MinimumQualification,
+                PreferredFieldOfStudy    = j.PreferredFieldOfStudy,
+                MinimumExperienceYears   = j.MinimumExperienceYears,
+                VacancyCount             = j.VacancyCount,
+                VacancyImageIds          = j.VacancyImages
+                                            .OrderBy(i => i.DisplayOrder)
+                                            .Select(i => i.JobVacancyImageId)
+                                            .ToList(),
+                IsReopenRequest          = j.IsReopenRequest
             }).ToList();
 
             var viewModel = new JobApprovalViewModel
@@ -146,6 +162,29 @@ namespace JobSeeker.Controllers.Admin
             };
 
             return View(viewPath, viewModel);
+        }
+
+        // GET: /JobApproval/VacancyImage/{imageId}
+        // Returns a redirect to a 5-minute presigned S3 URL so admin can view vacancy images.
+        [HttpGet]
+        public async Task<IActionResult> VacancyImage(long imageId)
+        {
+            var image = await _context.JobVacancyImages
+                .AsNoTracking()
+                .FirstOrDefaultAsync(i => i.JobVacancyImageId == imageId);
+
+            if (image == null) return NotFound();
+
+            try
+            {
+                var url = await _s3Storage.GetVacancyImagePresignedUrlAsync(
+                    image.ImageS3Key, TimeSpan.FromMinutes(5));
+                return Redirect(url);
+            }
+            catch
+            {
+                return NotFound();
+            }
         }
 
         private async Task WriteAuditLog(

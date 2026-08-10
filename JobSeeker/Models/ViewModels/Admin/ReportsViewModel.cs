@@ -17,5 +17,7 @@ namespace JobSeeker.Models.ViewModels.Admin
         public string ReportType { get; set; } = string.Empty;
         public string GeneratedByName { get; set; } = string.Empty;
         public DateTime GeneratedAt { get; set; }
+        public bool HasFile { get; set; }
+        public long? FileSizeBytes { get; set; }
     }
 }
