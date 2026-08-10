@@ -13,6 +13,7 @@ namespace JobSeeker.Data
         public DbSet<JobSeekerSkill> JobSeekerSkills => Set<JobSeekerSkill>();
         public DbSet<Job> Jobs => Set<Job>();
         public DbSet<JobRequiredSkill> JobRequiredSkills => Set<JobRequiredSkill>();
+        public DbSet<JobVacancyImage> JobVacancyImages => Set<JobVacancyImage>();
         public DbSet<JobApplication> JobApplications => Set<JobApplication>();
         public DbSet<CompanyDetail> CompanyDetails => Set<CompanyDetail>();
         public DbSet<EmployerProfile> EmployerProfiles => Set<EmployerProfile>();
@@ -195,6 +196,21 @@ namespace JobSeeker.Data
                     .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasIndex(required => new { required.JobId, required.SkillId }).IsUnique();
+            });
+
+            modelBuilder.Entity<JobVacancyImage>(entity =>
+            {
+                entity.ToTable("job_vacancy_images");
+                entity.HasKey(image => image.JobVacancyImageId);
+                entity.Property(image => image.ImageS3Key).HasMaxLength(1024).IsRequired();
+                entity.Property(image => image.UploadedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                entity.HasOne(image => image.Job)
+                    .WithMany(job => job.VacancyImages)
+                    .HasForeignKey(image => image.JobId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(image => image.JobId);
             });
 
             modelBuilder.Entity<JobApplication>(entity =>

@@ -76,5 +76,7 @@ namespace JobSeeker.Models
         public ICollection<JobRequiredSkill> RequiredSkills { get; set; } = new List<JobRequiredSkill>();
 
         public ICollection<JobApplication> Applications { get; set; } = new List<JobApplication>();
+
+        public ICollection<JobVacancyImage> VacancyImages { get; set; } = new List<JobVacancyImage>();
     }
 }

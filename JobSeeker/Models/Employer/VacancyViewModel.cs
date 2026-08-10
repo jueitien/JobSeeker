@@ -92,6 +92,12 @@ namespace JobSeeker.Models.Employer
         /// </summary>
         public List<SkillRequirementViewModel> SkillRequirements { get; set; } = new();
 
+        /// <summary>
+        /// Up to 3 images to attach to the vacancy posting (job_vacancy_images
+        /// table). Stored in the dedicated "job-vacancies-images" S3 bucket.
+        /// </summary>
+        public List<Microsoft.AspNetCore.Http.IFormFile> VacancyImages { get; set; } = new();
+
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             if (MinimumSalary.HasValue && MaximumSalary.HasValue && MaximumSalary < MinimumSalary)
@@ -139,6 +145,41 @@ namespace JobSeeker.Models.Employer
                     yield return new ValidationResult(
                         $"The total importance weightage for all skills must equal exactly 100%. Current total: {totalWeight:0.##}%.",
                         new[] { nameof(SkillRequirements) });
+                }
+            }
+
+            var providedImages = VacancyImages.Where(f => f != null && f.Length > 0).ToList();
+
+            if (providedImages.Count > 3)
+            {
+                yield return new ValidationResult(
+                    "You can upload a maximum of 3 images.",
+                    new[] { nameof(VacancyImages) });
+            }
+
+            const long maxImageBytes = 5 * 1024 * 1024;
+            var allowedImageExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+
+            foreach (var image in providedImages)
+            {
+                var extension = System.IO.Path.GetExtension(image.FileName).ToLowerInvariant();
+                if (!allowedImageExtensions.Contains(extension))
+                {
+                    yield return new ValidationResult(
+                        "Vacancy images must be JPG, JPEG, PNG, or WEBP.",
+                        new[] { nameof(VacancyImages) });
+                    break;
+                }
+            }
+
+            foreach (var image in providedImages)
+            {
+                if (image.Length > maxImageBytes)
+                {
+                    yield return new ValidationResult(
+                        "Each vacancy image must be 5 MB or smaller.",
+                        new[] { nameof(VacancyImages) });
+                    break;
                 }
             }
         }

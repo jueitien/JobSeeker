@@ -212,6 +212,12 @@ else
                             </div>
 
                             <div class="d-flex gap-2">
+                                @{
+                                    var imageUrls = job.VacancyImages
+                                        .OrderBy(img => img.DisplayOrder)
+                                        .Select(img => Url.Action("ViewImage", "Vacancies", new { id = img.JobVacancyImageId }))
+                                        .ToList();
+                                }
                                 <button type="button" class="btn btn-primary btn-sm flex-grow-1"
                                         data-bs-toggle="modal"
                                         data-bs-target="#vacancyDetailModal"
@@ -225,7 +231,8 @@ else
                                         data-requirements="@job.Responsibilities"
                                         data-deadline="@(job.ApplicationDeadline?.ToString("dd MMM yyyy") ?? "Open")"
                                         data-status="@Friendly(job.ApprovalStatus)"
-                                        data-postedon="@job.CreatedAt.ToString("dd MMM yyyy")">
+                                        data-postedon="@job.CreatedAt.ToString("dd MMM yyyy")"
+                                        data-images="@string.Join("|", imageUrls)">
                                     View Details
                                 </button>
 
@@ -266,7 +273,7 @@ else
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
-            <form asp-controller="Vacancies" asp-action="Post" method="post" novalidate>
+            <form asp-controller="Vacancies" asp-action="Post" method="post" enctype="multipart/form-data" novalidate>
                 @Html.AntiForgeryToken()
                 <div class="modal-body">
 
@@ -398,6 +405,19 @@ else
                             <span class="text-muted small" id="reqCount">0 / 4000</span>
                         </div>
                     </div>
+
+                    @* ── Vacancy Images Section ── *@
+                    <hr class="my-4" />
+                    <h6 class="fw-semibold mb-2">Vacancy Images</h6>
+                    <p class="text-muted small mb-2">
+                        Upload up to <strong>3 images</strong> for this vacancy (e.g. workplace photos, team photos).
+                        JPG, JPEG, PNG, or WEBP — max 5 MB each. You can select multiple images at once, or
+                        add them one at a time — click "Choose Files" again to add more, up to 3 total.
+                    </p>
+                    <input type="file" name="NewVacancy.VacancyImages" id="vacancyImagesInput"
+                           class="form-control" accept=".jpg,.jpeg,.png,.webp" multiple />
+                    <span asp-validation-for="NewVacancy.VacancyImages" class="text-danger small d-block mt-1"></span>
+                    <div id="vacancyImagePreview" class="d-flex flex-wrap gap-2 mt-2"></div>
 
                     @* ── Skills Requirement Section ── *@
                     <hr class="my-4" />
@@ -551,6 +571,10 @@ else
                         <span class="vac-detail-label">Posted on</span>
                         <div id="detailPostedBy" class="fw-medium">—</div>
                     </div>
+                </div>
+                <div id="detailImagesSection" class="mb-4 d-none">
+                    <h6 class="fw-semibold mb-2">Vacancy Images</h6>
+                    <div id="detailImages" class="d-flex flex-wrap gap-2"></div>
                 </div>
                 <hr />
                 <h6 class="fw-semibold mb-2">Job Description</h6>

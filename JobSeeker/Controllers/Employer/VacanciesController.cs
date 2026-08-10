@@ -1,6 +1,7 @@
 using JobSeeker.Data;
 using JobSeeker.Models;
 using JobSeeker.Models.Employer;
+using JobSeeker.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -11,13 +12,23 @@ namespace JobSeeker.Controllers.Employer
     [Authorize(Roles = "Employer")]
     public class VacanciesController : Controller
     {
+        private const int MaxVacancyImages = 3;
+
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly S3StorageService _s3Storage;
+        private readonly ILogger<VacanciesController> _logger;
 
-        public VacanciesController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        public VacanciesController(
+            ApplicationDbContext context,
+            UserManager<ApplicationUser> userManager,
+            S3StorageService s3Storage,
+            ILogger<VacanciesController> logger)
         {
             _context = context;
             _userManager = userManager;
+            _s3Storage = s3Storage;
+            _logger = logger;
         }
 
         // GET: /Vacancies
@@ -58,6 +69,7 @@ namespace JobSeeker.Controllers.Employer
             }
 
             var vacancies = await query
+                .Include(j => j.VacancyImages)
                 .OrderByDescending(j => j.CreatedAt)
                 .ToListAsync();
 
@@ -103,6 +115,7 @@ namespace JobSeeker.Controllers.Employer
             {
                 var vacancies = await _context.Jobs
                     .Where(j => j.EmployerId == user.Id)
+                    .Include(j => j.VacancyImages)
                     .OrderByDescending(j => j.CreatedAt)
                     .ToListAsync();
 
@@ -168,8 +181,75 @@ namespace JobSeeker.Controllers.Employer
 
             await _context.SaveChangesAsync();
 
-            TempData["SuccessMessage"] = "Job vacancy submitted successfully! It will be visible to job seekers once approved by an administrator.";
+            // Upload up to 3 vacancy images to the dedicated
+            // "job-vacancies-images" S3 bucket and record them in
+            // job_vacancy_images.
+            var imagesToUpload = model.VacancyImages
+                .Where(f => f != null && f.Length > 0)
+                .Take(MaxVacancyImages)
+                .ToList();
+
+            var imageUploadFailed = false;
+            var displayOrder = 0;
+
+            foreach (var image in imagesToUpload)
+            {
+                try
+                {
+                    var imageKey = await _s3Storage.UploadVacancyImageAsync(image, job.JobId.ToString());
+                    _context.JobVacancyImages.Add(new JobVacancyImage
+                    {
+                        JobId = job.JobId,
+                        ImageS3Key = imageKey,
+                        DisplayOrder = displayOrder,
+                        UploadedAt = now
+                    });
+                    displayOrder++;
+                }
+                catch (Exception ex)
+                {
+                    imageUploadFailed = true;
+                    _logger.LogError(ex, "Failed to upload vacancy image for job {JobId}.", job.JobId);
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = imageUploadFailed
+                ? "Job vacancy submitted successfully, but one or more images could not be uploaded. Check the S3 bucket name and Region."
+                : "Job vacancy submitted successfully! It will be visible to job seekers once approved by an administrator.";
             return RedirectToAction(nameof(Index));
+        }
+
+        // GET: /Vacancies/ViewImage/{id}
+        // {id} is the JobVacancyImage id. Only the employer who owns the
+        // vacancy may view its images through this action.
+        [HttpGet]
+        public async Task<IActionResult> ViewImage(long id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
+            var image = await _context.JobVacancyImages
+                .AsNoTracking()
+                .Include(i => i.Job)
+                .FirstOrDefaultAsync(i => i.JobVacancyImageId == id);
+
+            if (image == null || image.Job.EmployerId != user.Id)
+                return NotFound();
+
+            try
+            {
+                var presignedUrl = await _s3Storage.GetVacancyImagePresignedUrlAsync(
+                    image.ImageS3Key, TimeSpan.FromMinutes(5));
+                return Redirect(presignedUrl);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create presigned S3 URL for vacancy image {Key}.", image.ImageS3Key);
+                TempData["ErrorMessage"] = "The image could not be opened. Check the S3 bucket name and Region.";
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         // POST: /Vacancies/Close/{id}

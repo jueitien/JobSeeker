@@ -26,6 +26,25 @@
                 <span class="badge bg-secondary">${btn.getAttribute('data-workplacetype') || ''}</span>
                 <span class="badge bg-info text-dark">${btn.getAttribute('data-status') || ''}</span>
             `;
+
+            const imagesSection = document.getElementById('detailImagesSection');
+            const imagesContainer = document.getElementById('detailImages');
+            const imagesRaw = btn.getAttribute('data-images') || '';
+            const imageUrls = imagesRaw.split('|').filter(function (url) { return url.trim().length > 0; });
+
+            if (imagesContainer) {
+                if (imageUrls.length > 0) {
+                    imagesContainer.innerHTML = imageUrls.map(function (url) {
+                        return `<a href="${url}" target="_blank" rel="noopener">
+                                    <img src="${url}" alt="Vacancy image" class="vac-detail-image" />
+                                </a>`;
+                    }).join('');
+                    imagesSection?.classList.remove('d-none');
+                } else {
+                    imagesContainer.innerHTML = '';
+                    imagesSection?.classList.add('d-none');
+                }
+            }
         });
     }
 
@@ -58,6 +77,85 @@
             if (descCounter) descCounter.textContent = '0 / 4000';
             if (reqCounter)  reqCounter.textContent  = '0 / 4000';
             resetSkillRows();
+            resetVacancyImages();
+        });
+    }
+
+    // ── 3b) Vacancy Images — max 3, accumulated across multiple picks ──
+    // Native <input type="file" multiple> REPLACES the current selection
+    // every time the picker is opened again, unless the user multi-selects
+    // everything in one go. To let employers add images one at a time (or in
+    // batches) up to the 3-image limit, we keep our own running list of
+    // selected files and rebuild the input's FileList from it before submit.
+    const vacancyImagesInput = document.getElementById('vacancyImagesInput');
+    const vacancyImagePreview = document.getElementById('vacancyImagePreview');
+    const MAX_VACANCY_IMAGES = 3;
+    let selectedVacancyImages = [];
+
+    function renderVacancyImagePreviews() {
+        if (!vacancyImagePreview) return;
+        vacancyImagePreview.innerHTML = '';
+
+        selectedVacancyImages.forEach(function (file, index) {
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'vac-image-thumb-wrapper';
+
+                const img = document.createElement('img');
+                img.src = event.target.result;
+                img.alt = file.name;
+                img.className = 'vac-image-thumb';
+
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'vac-image-thumb-remove';
+                removeBtn.title = 'Remove image';
+                removeBtn.innerHTML = '&times;';
+                removeBtn.addEventListener('click', function () {
+                    selectedVacancyImages.splice(index, 1);
+                    syncVacancyImagesInput();
+                    renderVacancyImagePreviews();
+                });
+
+                wrapper.appendChild(img);
+                wrapper.appendChild(removeBtn);
+                vacancyImagePreview.appendChild(wrapper);
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function syncVacancyImagesInput() {
+        if (!vacancyImagesInput) return;
+        const dataTransfer = new DataTransfer();
+        selectedVacancyImages.forEach(function (file) {
+            dataTransfer.items.add(file);
+        });
+        vacancyImagesInput.files = dataTransfer.files;
+    }
+
+    function resetVacancyImages() {
+        selectedVacancyImages = [];
+        if (vacancyImagePreview) vacancyImagePreview.innerHTML = '';
+        if (vacancyImagesInput) vacancyImagesInput.value = '';
+    }
+
+    if (vacancyImagesInput && vacancyImagePreview) {
+        vacancyImagesInput.addEventListener('change', function () {
+            const newlyPicked = Array.from(vacancyImagesInput.files || []);
+            if (newlyPicked.length === 0) return;
+
+            let combined = selectedVacancyImages.concat(newlyPicked);
+
+            if (combined.length > MAX_VACANCY_IMAGES) {
+                alert(`You can upload a maximum of ${MAX_VACANCY_IMAGES} images. Only the first ${MAX_VACANCY_IMAGES} will be kept.`);
+                combined = combined.slice(0, MAX_VACANCY_IMAGES);
+            }
+
+            selectedVacancyImages = combined;
+            syncVacancyImagesInput();
+            renderVacancyImagePreviews();
         });
     }
 

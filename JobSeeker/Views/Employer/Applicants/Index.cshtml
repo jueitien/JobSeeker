@@ -226,6 +226,15 @@ else
                                 data-current-notes="@app.EmployerNotes">
                             Update Status
                         </button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm"
+                                data-bs-toggle="modal"
+                                data-bs-target="#viewProfileModal"
+                                data-applicant-name="@applicantName"
+                                data-applicant-email="@(app.JobSeekerProfile?.User?.Email ?? "Not provided")"
+                                data-applicant-phone="@(app.JobSeekerProfile?.User?.PhoneNumber ?? "Not provided")"
+                                data-applicant-status="@(app.JobSeekerProfile?.User?.AccountStatus ?? "Unknown")">
+                            View Profile
+                        </button>
                     </div>
                 </div>
             </div>
@@ -233,6 +242,40 @@ else
     </div>
 }
 
+
+@* ── Modal: View Applicant Profile ── *@
+<div class="modal fade" id="viewProfileModal" tabindex="-1"
+     aria-labelledby="viewProfileModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="viewProfileModalLabel">Applicant Profile</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <span class="vac-detail-label">Name</span>
+                    <div id="profileApplicantName">—</div>
+                </div>
+                <div class="mb-3">
+                    <span class="vac-detail-label">Email Address</span>
+                    <div id="profileApplicantEmail">—</div>
+                </div>
+                <div class="mb-3">
+                    <span class="vac-detail-label">Phone Number</span>
+                    <div id="profileApplicantPhone">—</div>
+                </div>
+                <div class="mb-0">
+                    <span class="vac-detail-label">Account Status</span>
+                    <div id="profileApplicantStatus">—</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 @* ── Modal: Update Applicant Status ── *@
 <div class="modal fade" id="updateStatusModal" tabindex="-1"
@@ -279,6 +322,15 @@ else
 
 @section Scripts {
     <script>
+        document.getElementById('viewProfileModal')?.addEventListener('show.bs.modal', function (event) {
+            var btn = event.relatedTarget;
+            if (!btn) return;
+            document.getElementById('profileApplicantName').textContent = btn.getAttribute('data-applicant-name') || '—';
+            document.getElementById('profileApplicantEmail').textContent = btn.getAttribute('data-applicant-email') || '—';
+            document.getElementById('profileApplicantPhone').textContent = btn.getAttribute('data-applicant-phone') || '—';
+            document.getElementById('profileApplicantStatus').textContent = btn.getAttribute('data-applicant-status') || '—';
+        });
+
         document.getElementById('updateStatusModal')?.addEventListener('show.bs.modal', function (event) {
             var btn = event.relatedTarget;
             if (!btn) return;
