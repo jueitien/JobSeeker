@@ -116,15 +116,7 @@ using (var scope = app.Services.CreateScope())
         await IdentitySeeder.SeedAdminUserAsync(
             scope.ServiceProvider);
 
-        // Seed demo data only while developing and testing locally.
-        if (app.Environment.IsDevelopment())
-        {
-            await IdentitySeeder.SeedFakeAdminDataAsync(
-                scope.ServiceProvider);
-
-            await CareerCounsellorSeeder.SeedRequestsAsync(
-                scope.ServiceProvider);
-        }
+        // Fake seed data removed — use real registrations for testing.
     }
     catch (Exception ex)
     {
