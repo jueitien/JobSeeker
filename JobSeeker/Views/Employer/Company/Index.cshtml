@@ -1,8 +1,16 @@
-@model JobSeeker.Models.CompanyDetail
+@model JobSeeker.Models.Employer.CompanyFormViewModel
 
 @{
     ViewData["Title"] = "Manage Company";
-    bool isNew = Model.CompanyDetailId == 0;
+
+    var statusBadgeClass = Model.VerificationStatus switch
+    {
+        "APPROVED" => "bg-success",
+        "REJECTED" => "bg-danger",
+        _ => "bg-warning text-dark"
+    };
+
+    var companySizeOptions = new[] { "1-10", "11-50", "51-200", "201-500", "500+" };
 }
 
 <link rel="stylesheet" href="~/css/employer.css" asp-append-version="true" />
@@ -11,7 +19,7 @@
     <div>
         <h2 class="mb-1">Manage Company</h2>
         <p class="text-muted mb-0">
-            Keep your company name and address up to date. These details are used to automatically
+            Keep your company profile up to date. Company Name and Address are used to automatically
             fill in the "Post a Vacancy" form.
         </p>
     </div>
@@ -26,38 +34,109 @@
 }
 
 <div class="row">
-    <div class="col-lg-7">
+    <div class="col-lg-8">
         <div class="card border-0 shadow-sm">
             <div class="card-body">
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-semibold mb-0">Verification Status</h6>
+                    <span class="badge @statusBadgeClass">@Model.VerificationStatus</span>
+                </div>
+
+                @if (Model.VerificationStatus == "REJECTED" && !string.IsNullOrWhiteSpace(Model.VerificationRemarks))
+                {
+                    <div class="alert alert-danger small">
+                        <strong>Verification remarks:</strong> @Model.VerificationRemarks
+                    </div>
+                }
+                else if (Model.VerificationStatus == "PENDING")
+                {
+                    <div class="alert alert-warning small">
+                        Your company profile is awaiting review by an Administrator.
+                    </div>
+                }
+                else if (Model.VerificationStatus == "APPROVED")
+                {
+                    <div class="alert alert-success small">
+                        Your company profile has been verified.
+                        @if (!string.IsNullOrWhiteSpace(Model.VerificationRemarks))
+                        {
+                            <div class="mt-1"><strong>Remarks:</strong> @Model.VerificationRemarks</div>
+                        }
+                    </div>
+                }
 
                 <div asp-validation-summary="ModelOnly" class="alert alert-danger small"></div>
 
                 <form asp-controller="Company" asp-action="Save" method="post" novalidate>
                     @Html.AntiForgeryToken()
-                    <input type="hidden" asp-for="CompanyDetailId" />
-                    <input type="hidden" asp-for="EmployerId" />
 
-                    <div class="mb-3">
-                        <label asp-for="CompanyName" class="form-label"></label>
-                        <input asp-for="CompanyName" class="form-control" placeholder="e.g. Tech Solutions Sdn Bhd" />
-                        <span asp-validation-for="CompanyName" class="text-danger small"></span>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="CompanyName" class="form-label"></label>
+                            <input asp-for="CompanyName" class="form-control" placeholder="e.g. Tech Solutions Sdn Bhd" />
+                            <span asp-validation-for="CompanyName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="CompanyRegistrationNumber" class="form-label"></label>
+                            <input asp-for="CompanyRegistrationNumber" class="form-control" placeholder="e.g. 202301012345" />
+                            <span asp-validation-for="CompanyRegistrationNumber" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="Industry" class="form-label"></label>
+                            <input asp-for="Industry" class="form-control" list="industryOptions" placeholder="e.g. Technology" />
+                            <datalist id="industryOptions">
+                                @foreach (var ind in new[] { "Technology", "Finance", "Healthcare", "Education", "Manufacturing", "Retail", "Human Resources", "Recruitment" })
+                                {
+                                    <option value="@ind"></option>
+                                }
+                            </datalist>
+                            <span asp-validation-for="Industry" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="CompanySize" class="form-label"></label>
+                            <select asp-for="CompanySize" class="form-select">
+                                <option value="">— Select —</option>
+                                @foreach (var size in companySizeOptions)
+                                {
+                                    <option value="@size" selected="@(Model.CompanySize == size)">@size employees</option>
+                                }
+                            </select>
+                            <span asp-validation-for="CompanySize" class="text-danger small"></span>
+                        </div>
                     </div>
 
                     <div class="mb-3">
-                        <label asp-for="Address" class="form-label"></label>
-                        <textarea asp-for="Address" class="form-control" rows="3"
+                        <label asp-for="CompanyWebsite" class="form-label"></label>
+                        <input asp-for="CompanyWebsite" class="form-control" placeholder="e.g. https://www.example.com" />
+                        <span asp-validation-for="CompanyWebsite" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="CompanyDescription" class="form-label"></label>
+                        <textarea asp-for="CompanyDescription" class="form-control" rows="4"
+                                  placeholder="Briefly describe what your company does…"></textarea>
+                        <span asp-validation-for="CompanyDescription" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="CompanyAddress" class="form-label"></label>
+                        <textarea asp-for="CompanyAddress" class="form-control" rows="3"
                                   placeholder="e.g. Lot 12, Jalan Bandar, 88000 Kota Kinabalu, Sabah"></textarea>
-                        <span asp-validation-for="Address" class="text-danger small"></span>
+                        <span asp-validation-for="CompanyAddress" class="text-danger small"></span>
                     </div>
 
-                    @if (!isNew)
+                    @if (!Model.IsNew && Model.UpdatedAt.HasValue)
                     {
-                        <p class="text-muted small">Last updated @Model.UpdatedAt.ToString("dd MMM yyyy, h:mm tt")</p>
+                        <p class="text-muted small">Last updated @Model.UpdatedAt.Value.ToString("dd MMM yyyy, h:mm tt")</p>
                     }
 
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-primary">
-                            @(isNew ? "Save Company Details" : "Update Company Details")
+                            @(Model.IsNew ? "Save Company Details" : "Update Company Details")
                         </button>
                         <a asp-controller="Home" asp-action="Employer" class="btn btn-outline-secondary">Back</a>
                     </div>
@@ -67,13 +146,14 @@
         </div>
     </div>
 
-    <div class="col-lg-5">
+    <div class="col-lg-4">
         <div class="card border-0 shadow-sm bg-light">
             <div class="card-body">
                 <h6 class="fw-semibold mb-2">Why add company details?</h6>
                 <p class="text-muted small mb-0">
-                    Once saved, the Company Name and Location fields in the "Post a Vacancy" form will be
-                    automatically filled in for you, so you don't need to retype them for every job posting.
+                    Company Name and Address are used to automatically fill in the "Post a Vacancy" form,
+                    so you don't need to retype them for every job posting. An Administrator will review
+                    your company profile before it's marked as verified.
                 </p>
             </div>
         </div>

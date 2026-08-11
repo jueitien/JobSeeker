@@ -5,7 +5,8 @@ namespace JobSeeker.Models
     /// <summary>
     /// A single image attached to a job vacancy (job_vacancy_images table).
     /// Up to 3 images may be attached per Job. Image bytes live in the
-    /// "job-vacancies-images" S3 bucket; only the object key is stored here.
+    /// "vacancy-images" folder of the main S3 bucket; only the object key
+    /// is stored here.
     /// </summary>
     public class JobVacancyImage
     {

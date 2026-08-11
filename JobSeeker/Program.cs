@@ -55,7 +55,13 @@ builder.Services.AddRazorPages();
 // During local development, place the AWS Academy Learner Lab credentials in:
 //   Windows: %USERPROFILE%\.aws\credentials
 // under the [default] profile.
-builder.Services.AddSingleton<IAmazonS3>(serviceProvider =>
+// Registered as Scoped (not Singleton) so a fresh AmazonS3Client is built
+// per request. This re-reads %USERPROFILE%\.aws\credentials each time,
+// which matters for AWS Academy Learner Lab: its temporary session
+// credentials expire every few hours, and a Singleton client would keep
+// using the stale credentials it captured at app startup until the app
+// is restarted, causing AccessDenied errors on every S3 call.
+builder.Services.AddScoped<IAmazonS3>(serviceProvider =>
 {
     var configuration = serviceProvider.GetRequiredService<IConfiguration>();
 

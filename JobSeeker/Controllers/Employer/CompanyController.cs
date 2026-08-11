@@ -1,5 +1,6 @@
 using JobSeeker.Data;
 using JobSeeker.Models;
+using JobSeeker.Models.Employer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -26,87 +27,102 @@ namespace JobSeeker.Controllers.Employer
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return Challenge();
 
-            var company = await _context.CompanyDetails
-                .FirstOrDefaultAsync(c => c.EmployerId == user.Id);
+            var profile = await _context.EmployerProfiles
+                .AsNoTracking()
+                .FirstOrDefaultAsync(e => e.EmployerId == user.Id);
 
-            return View("~/Views/Employer/Company/Index.cshtml", company ?? new CompanyDetail
-            {
-                EmployerId = user.Id
-            });
+            var model = profile == null
+                ? new CompanyFormViewModel { IsNew = true }
+                : new CompanyFormViewModel
+                {
+                    CompanyName = profile.CompanyName,
+                    CompanyRegistrationNumber = profile.CompanyRegistrationNumber,
+                    Industry = profile.Industry,
+                    CompanySize = profile.CompanySize,
+                    CompanyDescription = profile.CompanyDescription,
+                    CompanyWebsite = profile.CompanyWebsite,
+                    CompanyAddress = profile.CompanyAddress ?? string.Empty,
+                    VerificationStatus = profile.VerificationStatus,
+                    VerificationRemarks = profile.VerificationRemarks,
+                    UpdatedAt = profile.UpdatedAt,
+                    IsNew = false
+                };
+
+            return View("~/Views/Employer/Company/Index.cshtml", model);
         }
 
         // POST: /Company/Save
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Save(CompanyDetail model)
+        public async Task<IActionResult> Save(CompanyFormViewModel model)
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return Challenge();
 
-            // Navigation property / server-managed fields are not posted by the form.
-            ModelState.Remove(nameof(CompanyDetail.Employer));
-            ModelState.Remove(nameof(CompanyDetail.EmployerId));
-            ModelState.Remove(nameof(CompanyDetail.CreatedAt));
-            ModelState.Remove(nameof(CompanyDetail.UpdatedAt));
+            // Read-only / server-managed fields are not posted by the form.
+            ModelState.Remove(nameof(CompanyFormViewModel.VerificationStatus));
+            ModelState.Remove(nameof(CompanyFormViewModel.VerificationRemarks));
+            ModelState.Remove(nameof(CompanyFormViewModel.UpdatedAt));
+
+            var existing = await _context.EmployerProfiles
+                .FirstOrDefaultAsync(e => e.EmployerId == user.Id);
 
             if (!ModelState.IsValid)
             {
-                model.EmployerId = user.Id;
+                model.IsNew = existing == null;
+                model.VerificationStatus = existing?.VerificationStatus ?? "PENDING";
+                model.VerificationRemarks = existing?.VerificationRemarks;
+                model.UpdatedAt = existing?.UpdatedAt;
                 return View("~/Views/Employer/Company/Index.cshtml", model);
             }
 
             var now = DateTime.UtcNow;
-            var company = await _context.CompanyDetails
-                .FirstOrDefaultAsync(c => c.EmployerId == user.Id);
 
-            if (company == null)
-            {
-                company = new CompanyDetail
-                {
-                    EmployerId = user.Id,
-                    CompanyName = model.CompanyName.Trim(),
-                    Address = model.Address.Trim(),
-                    CreatedAt = now,
-                    UpdatedAt = now
-                };
-                _context.CompanyDetails.Add(company);
-            }
-            else
-            {
-                company.CompanyName = model.CompanyName.Trim();
-                company.Address = model.Address.Trim();
-                company.UpdatedAt = now;
-            }
+            var registrationNumber = NullIfBlank(model.CompanyRegistrationNumber);
+            var industry = NullIfBlank(model.Industry);
+            var companySize = NullIfBlank(model.CompanySize);
+            var description = NullIfBlank(model.CompanyDescription);
+            var website = NullIfBlank(model.CompanyWebsite);
 
-            await _context.SaveChangesAsync();
-
-            // Keep employer_profiles in sync so admin can verify the employer.
-            var profile = await _context.EmployerProfiles
-                .FirstOrDefaultAsync(p => p.EmployerId == user.Id);
-
-            if (profile == null)
+            if (existing == null)
             {
                 _context.EmployerProfiles.Add(new EmployerProfile
                 {
-                    EmployerId         = user.Id,
-                    CompanyName        = company.CompanyName,
-                    CompanyAddress     = company.Address,
+                    EmployerId = user.Id,
+                    CompanyName = model.CompanyName.Trim(),
+                    CompanyRegistrationNumber = registrationNumber,
+                    Industry = industry,
+                    CompanySize = companySize,
+                    CompanyDescription = description,
+                    CompanyWebsite = website,
+                    CompanyAddress = model.CompanyAddress.Trim(),
                     VerificationStatus = "PENDING",
-                    CreatedAt          = now,
-                    UpdatedAt          = now
+                    CreatedAt = now,
+                    UpdatedAt = now
                 });
             }
             else
             {
-                profile.CompanyName    = company.CompanyName;
-                profile.CompanyAddress = company.Address;
-                profile.UpdatedAt      = now;
+                existing.CompanyName = model.CompanyName.Trim();
+                existing.CompanyRegistrationNumber = registrationNumber;
+                existing.Industry = industry;
+                existing.CompanySize = companySize;
+                existing.CompanyDescription = description;
+                existing.CompanyWebsite = website;
+                existing.CompanyAddress = model.CompanyAddress.Trim();
+                existing.UpdatedAt = now;
             }
 
             await _context.SaveChangesAsync();
 
             TempData["SuccessMessage"] = "Company details saved.";
             return RedirectToAction(nameof(Index));
+        }
+
+        private static string? NullIfBlank(string? value)
+        {
+            var trimmed = value?.Trim();
+            return string.IsNullOrWhiteSpace(trimmed) ? null : trimmed;
         }
     }
 }

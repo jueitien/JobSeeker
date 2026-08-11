@@ -94,7 +94,7 @@ namespace JobSeeker.Models.Employer
 
         /// <summary>
         /// Up to 3 images to attach to the vacancy posting (job_vacancy_images
-        /// table). Stored in the dedicated "job-vacancies-images" S3 bucket.
+        /// table). Stored in the "vacancy-images" folder of the main S3 bucket.
         /// </summary>
         public List<Microsoft.AspNetCore.Http.IFormFile> VacancyImages { get; set; } = new();
 

@@ -20,10 +20,6 @@ namespace JobSeeker.Services
         private string BucketName =>
             _configuration["AWS:S3BucketName"]?.Trim() ?? string.Empty;
 
-        /// <summary>The dedicated bucket used for job vacancy images.</summary>
-        private string VacancyImagesBucketName =>
-            _configuration["AWS:VacancyImagesBucketName"]?.Trim() ?? string.Empty;
-
         private string RegionName =>
             _configuration["AWS:Region"]?.Trim() ?? "us-east-1";
 
@@ -38,22 +34,16 @@ namespace JobSeeker.Services
         }
 
         /// <summary>
-        /// Uploads a job vacancy image to the dedicated "job-vacancies-images"
-        /// bucket (configured via AWS:VacancyImagesBucketName).
+        /// Uploads a job vacancy image into the "vacancy-images" folder of the
+        /// main S3 bucket (AWS:S3BucketName), alongside resumes and
+        /// certifications.
         /// </summary>
         public async Task<string> UploadVacancyImageAsync(
             IFormFile file,
             string jobId,
             CancellationToken cancellationToken = default)
         {
-            var bucketName = VacancyImagesBucketName;
-            if (string.IsNullOrWhiteSpace(bucketName))
-            {
-                throw new InvalidOperationException(
-                    "AWS S3 is not configured. Set AWS:VacancyImagesBucketName in appsettings.json.");
-            }
-
-            return await UploadInternalAsync(file, "vacancy-images", jobId, bucketName, cancellationToken);
+            return await UploadInternalAsync(file, "vacancy-images", jobId, BucketName, cancellationToken);
         }
 
         private async Task<string> UploadInternalAsync(
@@ -119,22 +109,16 @@ namespace JobSeeker.Services
         }
 
         /// <summary>
-        /// Builds a time-limited, signed URL for an image stored in the
-        /// dedicated vacancy images bucket.
+        /// Builds a time-limited, signed URL for a vacancy image stored in the
+        /// "vacancy-images" folder of the main S3 bucket.
         /// </summary>
         public async Task<string> GetVacancyImagePresignedUrlAsync(
             string key,
             TimeSpan expiresIn,
             CancellationToken cancellationToken = default)
         {
-            var bucketName = VacancyImagesBucketName;
-            if (string.IsNullOrWhiteSpace(bucketName))
-            {
-                throw new InvalidOperationException(
-                    "AWS S3 is not configured. Set AWS:VacancyImagesBucketName in appsettings.json.");
-            }
-
-            return await GetPresignedUrlInternalAsync(key, bucketName, expiresIn, cancellationToken);
+            EnsureConfigured();
+            return await GetPresignedUrlInternalAsync(key, BucketName, expiresIn, cancellationToken);
         }
 
         private async Task<string> GetPresignedUrlInternalAsync(
@@ -172,7 +156,7 @@ namespace JobSeeker.Services
                 cancellationToken);
         }
 
-        /// <summary>Deletes an image from the dedicated vacancy images bucket.</summary>
+        /// <summary>Deletes a vacancy image from the main S3 bucket.</summary>
         public async Task DeleteVacancyImageAsync(
             string? key,
             CancellationToken cancellationToken = default)
@@ -180,14 +164,13 @@ namespace JobSeeker.Services
             if (string.IsNullOrWhiteSpace(key))
                 return;
 
-            var bucketName = VacancyImagesBucketName;
-            if (string.IsNullOrWhiteSpace(bucketName))
+            if (string.IsNullOrWhiteSpace(BucketName))
                 return;
 
             await _s3.DeleteObjectAsync(
                 new DeleteObjectRequest
                 {
-                    BucketName = bucketName,
+                    BucketName = BucketName,
                     Key = key
                 },
                 cancellationToken);

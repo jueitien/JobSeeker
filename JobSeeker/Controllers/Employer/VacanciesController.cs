@@ -73,7 +73,7 @@ namespace JobSeeker.Controllers.Employer
                 .OrderByDescending(j => j.CreatedAt)
                 .ToListAsync();
 
-            var company = await _context.CompanyDetails
+            var company = await _context.EmployerProfiles
                 .AsNoTracking()
                 .FirstOrDefaultAsync(c => c.EmployerId == user.Id);
 
@@ -95,7 +95,7 @@ namespace JobSeeker.Controllers.Employer
                     // Auto-fill from the employer's saved company profile, if any.
                     // Location is capped at 200 chars to match the jobs table column width.
                     CompanyName = company?.CompanyName ?? string.Empty,
-                    Location = company?.Address is { Length: > 200 } addr ? addr[..200] : company?.Address
+                    Location = company?.CompanyAddress is { Length: > 200 } addr ? addr[..200] : company?.CompanyAddress
                 },
                 HasCompanyDetails = company != null
             };
@@ -119,7 +119,7 @@ namespace JobSeeker.Controllers.Employer
                     .OrderByDescending(j => j.CreatedAt)
                     .ToListAsync();
 
-                var hasCompany = await _context.CompanyDetails
+                var hasCompany = await _context.EmployerProfiles
                     .AsNoTracking()
                     .AnyAsync(c => c.EmployerId == user.Id);
 
@@ -182,15 +182,15 @@ namespace JobSeeker.Controllers.Employer
 
             await _context.SaveChangesAsync();
 
-            // Upload up to 3 vacancy images to the dedicated
-            // "job-vacancies-images" S3 bucket and record them in
-            // job_vacancy_images.
+            // Upload up to 3 vacancy images into the "vacancy-images" folder
+            // of the main S3 bucket and record them in job_vacancy_images.
             var imagesToUpload = model.VacancyImages
                 .Where(f => f != null && f.Length > 0)
                 .Take(MaxVacancyImages)
                 .ToList();
 
             var imageUploadFailed = false;
+            var imageUploadErrorDetail = string.Empty;
             var displayOrder = 0;
 
             foreach (var image in imagesToUpload)
@@ -210,6 +210,7 @@ namespace JobSeeker.Controllers.Employer
                 catch (Exception ex)
                 {
                     imageUploadFailed = true;
+                    imageUploadErrorDetail = ex.Message;
                     _logger.LogError(ex, "Failed to upload vacancy image for job {JobId}.", job.JobId);
                 }
             }
@@ -217,7 +218,7 @@ namespace JobSeeker.Controllers.Employer
             await _context.SaveChangesAsync();
 
             TempData["SuccessMessage"] = imageUploadFailed
-                ? "Job vacancy submitted successfully, but one or more images could not be uploaded. Check the S3 bucket name and Region."
+                ? $"Job vacancy submitted successfully, but one or more images could not be uploaded: {imageUploadErrorDetail}"
                 : "Job vacancy submitted successfully! It will be visible to job seekers once approved by an administrator.";
             return RedirectToAction(nameof(Index));
         }
