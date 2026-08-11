@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using JobSeeker.Data;
 using JobSeeker.Models;
+using JobSeeker.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -8,7 +9,10 @@ using Microsoft.EntityFrameworkCore;
 namespace JobSeeker.Controllers;
 
 [Authorize(Roles = UserRoles.CareerCounsellor)]
-public class CareerCounsellorController(ApplicationDbContext db) : Controller
+public class CareerCounsellorController(
+    ApplicationDbContext db,
+    S3StorageService s3Storage,
+    ILogger<CareerCounsellorController> logger) : Controller
 {
     [HttpGet]
     public async Task<IActionResult> ResumeReview() => View(await db.ResumeFeedback
@@ -22,6 +26,44 @@ public class CareerCounsellorController(ApplicationDbContext db) : Controller
             .ThenInclude(x => x.JobSeekerProfile).ThenInclude(x => x.User)
             .FirstOrDefaultAsync(x => x.ResumeFeedbackId == requestId);
         return record is null ? NotFound() : View(record);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> ViewResume(long requestId)
+    {
+        var feedback = await db.ResumeFeedback
+            .AsNoTracking()
+            .Include(record => record.Resume)
+            .FirstOrDefaultAsync(record => record.ResumeFeedbackId == requestId);
+
+        if (feedback?.Resume is null ||
+            string.IsNullOrWhiteSpace(feedback.Resume.ResumeS3Key))
+        {
+            return NotFound();
+        }
+
+        try
+        {
+            var presignedUrl = await s3Storage.GetPresignedUrlAsync(
+                feedback.Resume.ResumeS3Key,
+                TimeSpan.FromMinutes(5));
+
+            return Redirect(presignedUrl);
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(
+                exception,
+                "Failed to create a presigned S3 URL for resume {Key}.",
+                feedback.Resume.ResumeS3Key);
+
+            TempData["ErrorMessage"] =
+                "The resume could not be opened. Check the S3 connection and try again.";
+
+            return RedirectToAction(
+                nameof(ResumeFeedbackForm),
+                new { requestId });
+        }
     }
 
     [HttpPost, ValidateAntiForgeryToken]
