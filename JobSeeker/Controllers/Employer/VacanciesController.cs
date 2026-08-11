@@ -190,7 +190,6 @@ namespace JobSeeker.Controllers.Employer
                 .ToList();
 
             var imageUploadFailed = false;
-            var imageUploadErrorDetail = string.Empty;
             var displayOrder = 0;
 
             foreach (var image in imagesToUpload)
@@ -210,7 +209,6 @@ namespace JobSeeker.Controllers.Employer
                 catch (Exception ex)
                 {
                     imageUploadFailed = true;
-                    imageUploadErrorDetail = ex.Message;
                     _logger.LogError(ex, "Failed to upload vacancy image for job {JobId}.", job.JobId);
                 }
             }
@@ -218,7 +216,7 @@ namespace JobSeeker.Controllers.Employer
             await _context.SaveChangesAsync();
 
             TempData["SuccessMessage"] = imageUploadFailed
-                ? $"Job vacancy submitted successfully, but one or more images could not be uploaded: {imageUploadErrorDetail}"
+                ? "Job vacancy submitted successfully. One or more vacancy images could not be uploaded."
                 : "Job vacancy submitted successfully! It will be visible to job seekers once approved by an administrator.";
             return RedirectToAction(nameof(Index));
         }
@@ -249,7 +247,7 @@ namespace JobSeeker.Controllers.Employer
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to create presigned S3 URL for vacancy image {Key}.", image.ImageS3Key);
-                TempData["ErrorMessage"] = "The image could not be opened. Check the S3 bucket name and Region.";
+                TempData["ErrorMessage"] = "The vacancy image could not be opened.";
                 return RedirectToAction(nameof(Index));
             }
         }

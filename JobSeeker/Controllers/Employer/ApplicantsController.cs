@@ -139,7 +139,7 @@ namespace JobSeeker.Controllers.Employer
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to create presigned S3 URL for resume {Key}.", application.Resume.ResumeS3Key);
-                TempData["ErrorMessage"] = "The resume could not be opened. Check the S3 bucket name and Region.";
+                TempData["ErrorMessage"] = "The resume could not be opened.";
                 return RedirectToAction(nameof(Index));
             }
         }

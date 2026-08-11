@@ -548,7 +548,7 @@ namespace JobSeeker.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to create presigned S3 URL for object {Key}.", key);
-                TempData["ErrorMessage"] = "The file could not be opened. Please check the S3 configuration and try again.";
+                TempData["ErrorMessage"] = "The file could not be opened. Please try again.";
                 return RedirectToAction(nameof(Index));
             }
         }

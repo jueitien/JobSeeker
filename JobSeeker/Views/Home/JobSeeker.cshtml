@@ -113,6 +113,20 @@
             {
                 var job = item.Job;
                 <article class="job-result-card">
+                    @if (job.VacancyImages.Any())
+                    {
+                        <div class="vacancy-image-gallery">
+                            @foreach (var image in job.VacancyImages.OrderBy(x => x.DisplayOrder).Take(3))
+                            {
+                                <a asp-controller="Jobs" asp-action="VacancyImage" asp-route-id="@image.JobVacancyImageId"
+                                   target="_blank" class="vacancy-image-link" title="Open vacancy image">
+                                    <img src="@Url.Action("VacancyImage", "Jobs", new { id = image.JobVacancyImageId })"
+                                         alt="@job.JobTitle vacancy image" class="vacancy-image" loading="lazy" />
+                                </a>
+                            }
+                        </div>
+                    }
+
                     <div class="job-result-main">
                         <div class="job-company-logo">@Initials(job.CompanyName)</div>
 

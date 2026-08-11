@@ -50,6 +50,20 @@
             @foreach (var application in Model)
             {
                 <article class="application-card">
+                    @if (application.Job.VacancyImages.Any())
+                    {
+                        <div class="vacancy-image-gallery application-vacancy-images">
+                            @foreach (var image in application.Job.VacancyImages.OrderBy(x => x.DisplayOrder).Take(3))
+                            {
+                                <a asp-controller="Applications" asp-action="VacancyImage" asp-route-id="@image.JobVacancyImageId"
+                                   target="_blank" class="vacancy-image-link" title="Open vacancy image">
+                                    <img src="@Url.Action("VacancyImage", "Applications", new { id = image.JobVacancyImageId })"
+                                         alt="@application.Job.JobTitle vacancy image" class="vacancy-image" loading="lazy" />
+                                </a>
+                            }
+                        </div>
+                    }
+
                     <div class="application-main">
                         <div class="job-company-logo">@Initials(application.Job.CompanyName)</div>
                         <div class="application-content">
@@ -84,9 +98,10 @@
 
                             @if (!string.IsNullOrWhiteSpace(application.EmployerNotes))
                             {
-                                <div class="employer-note">
-                                    <strong>Employer note</strong>
+                                <div class="employer-note employer-message">
+                                    <strong>Message from employer</strong>
                                     <p>@application.EmployerNotes</p>
+                                    <small>Last updated @application.UpdatedAt.ToLocalTime().ToString("dd MMM yyyy, h:mm tt")</small>
                                 </div>
                             }
 

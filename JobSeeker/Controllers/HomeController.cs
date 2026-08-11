@@ -72,6 +72,7 @@ namespace JobSeeker.Controllers
                 .AsNoTracking()
                 .Include(x => x.RequiredSkills)
                     .ThenInclude(x => x.Skill)
+                .Include(x => x.VacancyImages)
                 .Where(x => x.ApprovalStatus == "APPROVED" && x.JobStatus == "OPEN")
                 .OrderByDescending(x => x.CreatedAt)
                 .ToListAsync();

@@ -703,3 +703,38 @@ img.profile-avatar { object-fit: cover; border: 1px solid var(--portal-border); 
         justify-content: flex-start;
     }
 }
+
+
+/* Vacancy images shown to Job Seekers */
+.vacancy-image-gallery {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.vacancy-image-link {
+  display: block;
+  overflow: hidden;
+  border-radius: 11px;
+  border: 1px solid var(--portal-border);
+  background: #f5f7fa;
+  aspect-ratio: 16 / 9;
+}
+.vacancy-image {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  transition: transform .18s ease;
+}
+.vacancy-image-link:hover .vacancy-image { transform: scale(1.025); }
+.application-vacancy-images { margin-bottom: 18px; }
+.employer-message small {
+  display: block;
+  margin-top: 6px;
+  color: var(--portal-muted);
+  font-size: .75rem;
+}
+@media (max-width: 575.98px) {
+  .vacancy-image-gallery { grid-template-columns: 1fr; }
+}

@@ -13,13 +13,19 @@ namespace JobSeeker.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly S3StorageService _s3Storage;
+        private readonly ILogger<ApplicationsController> _logger;
 
         public ApplicationsController(
             ApplicationDbContext context,
-            UserManager<ApplicationUser> userManager)
+            UserManager<ApplicationUser> userManager,
+            S3StorageService s3Storage,
+            ILogger<ApplicationsController> logger)
         {
             _context = context;
             _userManager = userManager;
+            _s3Storage = s3Storage;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -30,6 +36,7 @@ namespace JobSeeker.Controllers
             var query = _context.JobApplications
                 .AsNoTracking()
                 .Include(x => x.Job)
+                    .ThenInclude(x => x.VacancyImages)
                 .Include(x => x.Resume)
                 .Where(x => x.JobSeekerId == user.Id);
 
@@ -44,6 +51,42 @@ namespace JobSeeker.Controllers
 
             ViewBag.SelectedStatus = status;
             return View(applications);
+        }
+
+
+        // Lets the Job Seeker view an image for a vacancy they have applied to.
+        [HttpGet]
+        public async Task<IActionResult> VacancyImage(long id)
+        {
+            var user = await GetCurrentUserAsync();
+
+            var image = await _context.JobVacancyImages
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.JobVacancyImageId == id);
+
+            if (image == null)
+                return NotFound();
+
+            var ownsApplication = await _context.JobApplications
+                .AsNoTracking()
+                .AnyAsync(x => x.JobSeekerId == user.Id && x.JobId == image.JobId);
+
+            if (!ownsApplication)
+                return NotFound();
+
+            try
+            {
+                var url = await _s3Storage.GetVacancyImagePresignedUrlAsync(
+                    image.ImageS3Key, TimeSpan.FromMinutes(10));
+
+                return Redirect(url);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Could not load application vacancy image {VacancyImageId}.", id);
+                return NotFound();
+            }
         }
 
         [HttpPost]
