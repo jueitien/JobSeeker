@@ -34,9 +34,7 @@ namespace JobSeeker.Controllers.Admin
 
         // ─── Bucket used for reports ──────────────────────────────────────────
         private string ReportsBucket =>
-            _config["AWS:ReportsBucketName"]?.Trim()
-            ?? _config["AWS:S3BucketName"]?.Trim()
-            ?? string.Empty;
+            _config["AWS:S3BucketName"]?.Trim() ?? string.Empty;
 
         [HttpGet]
         public async Task<IActionResult> Index()

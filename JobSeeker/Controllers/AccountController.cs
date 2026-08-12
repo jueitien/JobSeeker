@@ -350,11 +350,13 @@ namespace JobSeeker.Controllers
 
             try
             {
-                return Redirect(_s3Storage.GetPublicUrl(user.ProfileImageS3Key));
+                var presignedUrl = await _s3Storage.GetPresignedUrlAsync(
+                    user.ProfileImageS3Key, TimeSpan.FromMinutes(30));
+                return Redirect(presignedUrl);
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Could not create public profile image URL for {Key}.", user.ProfileImageS3Key);
+                _logger.LogWarning(ex, "Could not create presigned profile image URL for {Key}.", user.ProfileImageS3Key);
                 return NotFound();
             }
         }
