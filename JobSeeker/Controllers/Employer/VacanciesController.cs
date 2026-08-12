@@ -304,5 +304,222 @@ namespace JobSeeker.Controllers.Employer
                 : $"\"{job.JobTitle}\" has been reopened.";
             return RedirectToAction(nameof(Index));
         }
+
+        // POST: /Vacancies/Delete/{id}
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(long id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
+            var job = await _context.Jobs
+                .Include(j => j.VacancyImages)
+                .FirstOrDefaultAsync(j => j.JobId == id && j.EmployerId == user.Id);
+
+            if (job == null) return NotFound();
+
+            var jobTitle = job.JobTitle;
+
+            // Delete associated vacancy images from S3 storage
+            foreach (var image in job.VacancyImages)
+            {
+                if (!string.IsNullOrWhiteSpace(image.ImageS3Key))
+                {
+                    try
+                    {
+                        await _s3Storage.DeleteAsync(image.ImageS3Key);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning($"Failed to delete vacancy image from S3: {image.ImageS3Key}. Error: {ex.Message}");
+                    }
+                }
+            }
+
+            // Delete the job and associated records (cascade)
+            _context.Jobs.Remove(job);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = $"\"{jobTitle}\" has been deleted successfully.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        // GET: /Vacancies/Edit/{id}
+        [HttpGet]
+        public async Task<IActionResult> Edit(long id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
+            var job = await _context.Jobs
+                .Include(j => j.RequiredSkills)
+                .FirstOrDefaultAsync(j => j.JobId == id && j.EmployerId == user.Id);
+
+            if (job == null) return NotFound();
+
+            // Prepare the form model with current job data
+            var formModel = new VacancyFormViewModel
+            {
+                JobTitle = job.JobTitle,
+                CompanyName = job.CompanyName,
+                Location = job.Location,
+                EmploymentType = job.EmploymentType,
+                WorkplaceType = job.WorkplaceType,
+                MinimumQualification = job.MinimumQualification,
+                PreferredFieldOfStudy = job.PreferredFieldOfStudy,
+                MinimumExperienceYears = job.MinimumExperienceYears,
+                MinimumSalary = job.MinimumSalary,
+                MaximumSalary = job.MaximumSalary,
+                VacancyCount = job.VacancyCount,
+                ApplicationDeadline = job.ApplicationDeadline,
+                JobDescription = job.JobDescription,
+                Responsibilities = job.Responsibilities,
+                SkillRequirements = job.RequiredSkills
+                    .Select(rs => new SkillRequirementViewModel
+                    {
+                        SkillId = rs.SkillId,
+                        RequirementType = rs.RequirementType,
+                        ImportanceWeight = rs.ImportanceWeight
+                    })
+                    .ToList()
+            };
+
+            var skills = await _context.Skills
+                .AsNoTracking()
+                .OrderBy(s => s.SkillName)
+                .ToListAsync();
+
+            var vacancies = await _context.Jobs
+                .Where(j => j.EmployerId == user.Id)
+                .Include(j => j.VacancyImages)
+                .OrderByDescending(j => j.CreatedAt)
+                .ToListAsync();
+
+            var company = await _context.EmployerProfiles
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.EmployerId == user.Id);
+
+            var viewModel = new VacanciesPageViewModel
+            {
+                PublishedVacancies = vacancies,
+                AvailableSkills = skills,
+                NewVacancy = formModel,
+                HasCompanyDetails = company != null,
+                EditingJobId = id
+            };
+
+            return View("~/Views/Employer/Vacancies/Index.cshtml", viewModel);
+        }
+
+        // POST: /Vacancies/Update/{id}
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Update(long id, [Bind(Prefix = "NewVacancy")] VacancyFormViewModel model)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
+            var job = await _context.Jobs
+                .Include(j => j.RequiredSkills)
+                .FirstOrDefaultAsync(j => j.JobId == id && j.EmployerId == user.Id);
+
+            if (job == null) return NotFound();
+
+            if (!ModelState.IsValid)
+            {
+                var vacancies = await _context.Jobs
+                    .Where(j => j.EmployerId == user.Id)
+                    .Include(j => j.VacancyImages)
+                    .OrderByDescending(j => j.CreatedAt)
+                    .ToListAsync();
+
+                var skills = await _context.Skills
+                    .AsNoTracking()
+                    .OrderBy(s => s.SkillName)
+                    .ToListAsync();
+
+                var hasCompany = await _context.EmployerProfiles
+                    .AsNoTracking()
+                    .AnyAsync(c => c.EmployerId == user.Id);
+
+                var viewModel = new VacanciesPageViewModel
+                {
+                    NewVacancy = model,
+                    PublishedVacancies = vacancies,
+                    HasCompanyDetails = hasCompany,
+                    AvailableSkills = skills,
+                    EditingJobId = id
+                };
+
+                return View("~/Views/Employer/Vacancies/Index.cshtml", viewModel);
+            }
+
+            // Update job fields
+            job.JobTitle = model.JobTitle;
+            job.CompanyName = model.CompanyName;
+            job.Location = model.Location;
+            job.EmploymentType = model.EmploymentType;
+            job.WorkplaceType = model.WorkplaceType;
+            job.MinimumQualification = model.MinimumQualification;
+            job.PreferredFieldOfStudy = model.PreferredFieldOfStudy;
+            job.MinimumExperienceYears = model.MinimumExperienceYears;
+            job.MinimumSalary = model.MinimumSalary;
+            job.MaximumSalary = model.MaximumSalary;
+            job.VacancyCount = model.VacancyCount;
+            job.ApplicationDeadline = model.ApplicationDeadline;
+            job.JobDescription = model.JobDescription;
+            job.Responsibilities = model.Responsibilities;
+            job.UpdatedAt = DateTime.UtcNow;
+
+            // Update skills requirements
+            _context.JobRequiredSkills.RemoveRange(job.RequiredSkills);
+            job.RequiredSkills = model.SkillRequirements
+                .Where(sr => sr.SkillId > 0)
+                .Select(sr => new JobRequiredSkill
+                {
+                    JobId = job.JobId,
+                    SkillId = sr.SkillId,
+                    RequirementType = sr.RequirementType,
+                    ImportanceWeight = sr.ImportanceWeight
+                })
+                .ToList();
+
+            // Handle vacancy image uploads (if any new images are provided)
+            if (model.VacancyImages.Any(f => f != null && f.Length > 0))
+            {
+                var imagesToUpload = model.VacancyImages
+                    .Where(f => f != null && f.Length > 0)
+                    .Take(MaxVacancyImages)
+                    .ToList();
+
+                var displayOrder = job.VacancyImages.Any() ? job.VacancyImages.Max(img => img.DisplayOrder) + 1 : 0;
+
+                foreach (var image in imagesToUpload)
+                {
+                    try
+                    {
+                        var imageKey = await _s3Storage.UploadVacancyImageAsync(image, job.JobId.ToString());
+                        _context.JobVacancyImages.Add(new JobVacancyImage
+                        {
+                            JobId = job.JobId,
+                            ImageS3Key = imageKey,
+                            DisplayOrder = displayOrder,
+                            UploadedAt = DateTime.UtcNow
+                        });
+                        displayOrder++;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to upload vacancy image for job {JobId}.", job.JobId);
+                    }
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = $"\"{job.JobTitle}\" has been updated.";
+            return RedirectToAction(nameof(Index));
+        }
     }
 }

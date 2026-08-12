@@ -207,5 +207,11 @@ namespace JobSeeker.Models.Employer
         /// show a hint that Company Name/Location were auto-filled from it.
         /// </summary>
         public bool HasCompanyDetails { get; set; }
+
+        /// <summary>
+        /// If set, the form is in edit mode for the specified job ID.
+        /// When null, the form is for creating a new vacancy.
+        /// </summary>
+        public long? EditingJobId { get; set; }
     }
 }

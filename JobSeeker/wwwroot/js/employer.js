@@ -12,6 +12,7 @@
             const btn = event.relatedTarget;
             if (!btn) return;
 
+            const jobId = btn.getAttribute('data-jobid');
             document.getElementById('vacancyDetailModalLabel').textContent = btn.getAttribute('data-title') || '—';
             document.getElementById('detailCompany').textContent           = btn.getAttribute('data-company') || '—';
             document.getElementById('detailLocation').textContent          = btn.getAttribute('data-location') || '—';
@@ -20,6 +21,38 @@
             document.getElementById('detailPostedBy').textContent          = btn.getAttribute('data-postedon') || '—';
             document.getElementById('detailDescription').textContent       = btn.getAttribute('data-description') || '';
             document.getElementById('detailRequirements').textContent      = btn.getAttribute('data-requirements') || '';
+
+            // Update delete form with the job ID
+            const deleteForm = document.getElementById('deleteVacancyForm');
+            if (deleteForm && jobId) {
+                deleteForm.innerHTML = '<input type="hidden" name="id" value="' + jobId + '" />';
+                // Add the CSRF token if it exists
+                const csrfToken = document.querySelector('input[name="__RequestVerificationToken"]');
+                if (csrfToken) {
+                    const tokenClone = csrfToken.cloneNode(true);
+                    deleteForm.appendChild(tokenClone);
+                }
+            }
+
+            // Store job ID for edit button and add data attribute to trigger edit navigation
+            const editBtn = document.getElementById('editVacancyBtn');
+            if (editBtn && jobId) {
+                editBtn.setAttribute('data-jobid', jobId);
+                editBtn.onclick = function() {
+                    // Navigate to edit page which will load form in edit mode
+                    window.location.href = '/Vacancies/Edit/' + jobId;
+                };
+            }
+
+            // Handle rejection reason section
+            const rejectionReason = btn.getAttribute('data-rejectionreason') || '';
+            const rejectionSection = document.getElementById('detailRejectionSection');
+            if (rejectionReason.trim()) {
+                document.getElementById('detailRejectionReason').textContent = rejectionReason;
+                rejectionSection?.classList.remove('d-none');
+            } else {
+                rejectionSection?.classList.add('d-none');
+            }
 
             document.getElementById('detailChips').innerHTML = `
                 <span class="badge bg-primary">${btn.getAttribute('data-employmenttype') || ''}</span>
