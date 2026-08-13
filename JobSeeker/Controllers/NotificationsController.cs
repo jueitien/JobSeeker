@@ -75,6 +75,29 @@ namespace JobSeeker.Controllers
             return RedirectToAction(nameof(Index), new { filter = NormalizeFilter(filter) });
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> MarkAllAsRead()
+        {
+            var userId = GetCurrentUserId();
+            var unreadNotifications = await _context.Notifications
+                .Where(n => n.UserId == userId && !n.IsRead)
+                .ToListAsync();
+
+            if (unreadNotifications.Any())
+            {
+                var now = DateTime.UtcNow;
+                foreach (var notification in unreadNotifications)
+                {
+                    notification.IsRead = true;
+                    notification.ReadAt = now;
+                }
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
         private string GetCurrentUserId()
         {
             return _userManager.GetUserId(User)

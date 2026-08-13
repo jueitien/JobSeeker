@@ -28,6 +28,14 @@
            class="application-filter @(selectedFilter == "unread" ? "active" : "")">Unread</a>
         <a asp-action="Index" asp-route-filter="read"
            class="application-filter @(selectedFilter == "read" ? "active" : "")">Read</a>
+        
+        @if (unreadCount > 0)
+        {
+            <form asp-action="MarkAllAsRead" method="post" style="display: inline; margin-left: auto;">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-sm btn-outline-secondary">Mark all as read</button>
+            </form>
+        }
     </div>
 
     @if (!allNotifications.Any())

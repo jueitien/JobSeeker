@@ -34,6 +34,23 @@ namespace JobSeeker.Controllers.Employer
             _logger = logger;
         }
 
+        /// <summary>Helper method to create a notification for an applicant status change.</summary>
+        private async Task CreateNotificationAsync(string userId, string title, string message, string referenceType, long referenceId)
+        {
+            var notification = new Notification
+            {
+                UserId = userId,
+                NotificationType = "APPLICANT_STATUS_CHANGE",
+                Title = title,
+                Message = message,
+                ReferenceType = referenceType,
+                ReferenceId = referenceId,
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.Notifications.Add(notification);
+        }
+
         // GET: /Applicants
         [HttpGet]
         public async Task<IActionResult> Index(
@@ -170,6 +187,29 @@ namespace JobSeeker.Controllers.Employer
             application.ApplicationStatus = status;
             application.EmployerNotes = string.IsNullOrWhiteSpace(employerNotes) ? null : employerNotes.Trim();
             application.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            // Create notification for applicant status change
+            var statusDisplayName = status switch
+            {
+                "SUBMITTED" => "Submitted",
+                "UNDER_REVIEW" => "Under Review",
+                "SHORTLISTED" => "Shortlisted",
+                "INTERVIEW" => "Interview",
+                "OFFERED" => "Offered",
+                "HIRED" => "Hired",
+                "REJECTED" => "Rejected",
+                "WITHDRAWN" => "Withdrawn",
+                _ => status
+            };
+
+            await CreateNotificationAsync(
+                application.JobSeekerId,
+                "Application Status Updated",
+                $"Your application for \"{application.Job.JobTitle}\" is now {statusDisplayName}.",
+                "Application",
+                application.ApplicationId);
 
             await _context.SaveChangesAsync();
 
