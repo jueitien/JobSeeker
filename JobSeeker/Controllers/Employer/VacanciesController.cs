@@ -302,6 +302,8 @@ namespace JobSeeker.Controllers.Employer
                 "Job",
                 job.JobId);
 
+            await _context.SaveChangesAsync();
+
             TempData["SuccessMessage"] = $"\"{job.JobTitle}\" has been closed.";
             return RedirectToAction(nameof(Index));
         }
@@ -341,6 +343,8 @@ namespace JobSeeker.Controllers.Employer
                     : $"Your vacancy \"{job.JobTitle}\" has been reopened.",
                 "Job",
                 job.JobId);
+
+            await _context.SaveChangesAsync();
 
             TempData["SuccessMessage"] = wasRejected
                 ? $"\"{job.JobTitle}\" has been resubmitted for admin approval."
@@ -391,6 +395,8 @@ namespace JobSeeker.Controllers.Employer
                 $"Your vacancy \"{jobTitle}\" has been deleted.",
                 "Job",
                 id);
+
+            await _context.SaveChangesAsync();
 
             TempData["SuccessMessage"] = $"\"{jobTitle}\" has been deleted successfully.";
             return RedirectToAction(nameof(Index));
@@ -576,6 +582,8 @@ namespace JobSeeker.Controllers.Employer
                 $"Your vacancy \"{job.JobTitle}\" has been updated.",
                 "Job",
                 job.JobId);
+
+            await _context.SaveChangesAsync();
 
             TempData["SuccessMessage"] = $"\"{job.JobTitle}\" has been updated.";
             return RedirectToAction(nameof(Index));
