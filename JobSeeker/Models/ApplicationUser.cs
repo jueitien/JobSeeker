@@ -26,5 +26,7 @@ namespace JobSeeker.Models
         public JobSeekerProfile? JobSeekerProfile { get; set; }
 
         public CompanyDetail? CompanyDetail { get; set; }
+
+        public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
     }
 }

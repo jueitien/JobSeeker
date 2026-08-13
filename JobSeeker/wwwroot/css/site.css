@@ -738,3 +738,28 @@ img.profile-avatar { object-fit: cover; border: 1px solid var(--portal-border); 
 @media (max-width: 575.98px) {
   .vacancy-image-gallery { grid-template-columns: 1fr; }
 }
+
+/* Job Seeker notifications */
+.notification-nav-link { display: inline-flex; align-items: center; gap: 6px; }
+.notification-nav-badge { min-width: 1.6rem; }
+.notifications-page { max-width: 980px; margin: 0 auto; padding-bottom: 40px; }
+.notification-unread-summary { display: inline-flex; align-items: center; padding: 7px 12px; border-radius: 999px; background: #fff0f1; color: #b42331; font-size: .8rem; font-weight: 800; }
+.notification-list { display: grid; gap: 12px; }
+.notification-card { display: grid; grid-template-columns: 5px minmax(0, 1fr); overflow: hidden; background: #fff; border: 1px solid var(--portal-border); border-radius: 14px; box-shadow: 0 3px 14px rgba(24,31,47,.035); }
+.notification-card.unread { border-color: #c8d6fb; background: #fbfcff; }
+.notification-state { background: #c9ced8; }
+.notification-card.unread .notification-state { background: var(--portal-blue); }
+.notification-content { padding: 20px 22px; }
+.notification-title-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.notification-title-row h2 { margin: 0 0 4px; font-size: 1.05rem; }
+.notification-title-row time { color: var(--portal-muted); font-size: .78rem; }
+.notification-content > p { margin: 14px 0; color: #465166; }
+.notification-read-status { padding: 4px 9px; border-radius: 999px; background: #f0f2f5; color: #687386; font-size: .72rem; font-weight: 800; }
+.notification-card.unread .notification-read-status { background: var(--portal-blue-soft); color: var(--portal-blue); }
+.notification-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.notification-actions form { margin: 0; }
+
+@media (max-width: 575.98px) {
+  .notification-title-row { flex-direction: column; gap: 8px; }
+  .notification-content { padding: 18px; }
+}

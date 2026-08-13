@@ -67,6 +67,8 @@
                                     </a>
                                 </li>
 
+                                @await Component.InvokeAsync("NotificationNav")
+
                                 <li class="nav-item">
                                     <a class="nav-link text-dark"
                                        asp-controller="Feedback"

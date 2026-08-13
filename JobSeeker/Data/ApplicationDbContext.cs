@@ -23,6 +23,7 @@ namespace JobSeeker.Data
         public DbSet<CareerRecommendation> CareerRecommendations => Set<CareerRecommendation>();
         public DbSet<SkillRecommendation> SkillRecommendations => Set<SkillRecommendation>();
         public DbSet<CertificationRecommendation> CertificationRecommendations => Set<CertificationRecommendation>();
+        public DbSet<Notification> Notifications => Set<Notification>();
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
@@ -237,6 +238,30 @@ namespace JobSeeker.Data
 
                 entity.HasIndex(application => new { application.JobId, application.JobSeekerId }).IsUnique();
                 entity.HasIndex(application => new { application.JobSeekerId, application.ApplicationStatus });
+            });
+
+            modelBuilder.Entity<Notification>(entity =>
+            {
+                entity.ToTable("notifications");
+                entity.HasKey(notification => notification.NotificationId);
+                entity.Property(notification => notification.UserId).HasMaxLength(450).IsRequired();
+                entity.Property(notification => notification.NotificationType).HasMaxLength(50).IsRequired();
+                entity.Property(notification => notification.Title).HasMaxLength(200).IsRequired();
+                entity.Property(notification => notification.Message).HasColumnType("nvarchar(max)").IsRequired();
+                entity.Property(notification => notification.ReferenceType).HasMaxLength(50);
+                entity.Property(notification => notification.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                entity.HasOne(notification => notification.User)
+                    .WithMany(user => user.Notifications)
+                    .HasForeignKey(notification => notification.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(notification => new
+                {
+                    notification.UserId,
+                    notification.IsRead,
+                    notification.CreatedAt
+                });
             });
 
             modelBuilder.Entity<CompanyDetail>(entity =>

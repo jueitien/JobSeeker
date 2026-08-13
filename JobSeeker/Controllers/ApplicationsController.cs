@@ -146,7 +146,7 @@ namespace JobSeeker.Controllers
             var match = JobMatchCalculator.Calculate(profile, seekerSkillIds, job);
             var now = DateTime.UtcNow;
 
-            _context.JobApplications.Add(new JobApplication
+            var application = new JobApplication
             {
                 JobId = job.JobId,
                 JobSeekerId = user.Id,
@@ -155,9 +155,30 @@ namespace JobSeeker.Controllers
                 ApplicationStatus = "SUBMITTED",
                 AppliedAt = now,
                 UpdatedAt = now
+            };
+
+            await using var transaction = await _context.Database.BeginTransactionAsync();
+
+            _context.JobApplications.Add(application);
+
+            // Save once to obtain the SQL Server identity value used by the
+            // notification's generic reference fields.
+            await _context.SaveChangesAsync();
+
+            _context.Notifications.Add(new Notification
+            {
+                UserId = user.Id,
+                NotificationType = "APPLICATION_SUBMITTED",
+                Title = "Application submitted",
+                Message = $"Your application for {job.JobTitle} at {job.CompanyName} was submitted on {now:dd MMM yyyy 'at' HH:mm} UTC.",
+                ReferenceType = "JOB_APPLICATION",
+                ReferenceId = application.ApplicationId,
+                IsRead = false,
+                CreatedAt = now
             });
 
             await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
 
             TempData["SuccessMessage"] = $"Application submitted to {job.CompanyName}.";
             return RedirectToAction(nameof(Index));
