@@ -3,6 +3,9 @@
     ViewData["Title"] = "Notifications";
     var selectedFilter = ViewBag.SelectedFilter as string;
     var unreadCount = ViewBag.UnreadCount is int count ? count : 0;
+    var allNotifications = Model ?? new List<Notification>();
+    var unreadNotifications = allNotifications.Where(n => !n.IsRead).OrderByDescending(n => n.CreatedAt).ToList();
+    var readNotifications = allNotifications.Where(n => n.IsRead).OrderByDescending(n => n.CreatedAt).ToList();
 }
 
 <div class="notifications-page">
@@ -10,7 +13,7 @@
         <div>
             <span class="section-eyebrow">Activity updates</span>
             <h1>Notifications</h1>
-            <p>Review updates about your job applications and account activity.</p>
+            <p>Review updates about your vacancies and account activity.</p>
         </div>
         @if (unreadCount > 0)
         {
@@ -27,18 +30,89 @@
            class="application-filter @(selectedFilter == "read" ? "active" : "")">Read</a>
     </div>
 
-    @if (!Model.Any())
+    @if (!allNotifications.Any())
     {
         <div class="portal-card empty-job-list">
             <h3>No notifications here</h3>
-            <p>Updates about applications you submit will appear in this section.</p>
-            <a asp-controller="Home" asp-action="JobSeeker" class="btn btn-primary">Browse jobs</a>
+            <p>Updates about your vacancy actions will appear in this section.</p>
         </div>
+    }
+    else if (selectedFilter == null)
+    {
+        <!-- Show all notifications organized by read/unread sections -->
+        @if (unreadNotifications.Any())
+        {
+            <div class="notification-section">
+                <h2 class="notification-section-title">Unread (@unreadNotifications.Count)</h2>
+                <div class="notification-list">
+                    @foreach (var notification in unreadNotifications)
+                    {
+                        <article class="notification-card unread">
+                            <div class="notification-state" aria-hidden="true"></div>
+                            <div class="notification-content">
+                                <div class="notification-title-row">
+                                    <div>
+                                        <h2>@notification.Title</h2>
+                                        <time datetime="@notification.CreatedAt.ToString("O")">
+                                            @notification.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, h:mm tt")
+                                        </time>
+                                    </div>
+                                    <span class="notification-read-status badge bg-warning">Unread</span>
+                                </div>
+
+                                <p>@notification.Message</p>
+
+                                <div class="notification-actions">
+                                    @if (!notification.IsRead)
+                                    {
+                                        <form asp-action="MarkAsRead" method="post" style="display: inline;">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@notification.NotificationId" />
+                                            <input type="hidden" name="filter" value="@selectedFilter" />
+                                            <button type="submit" class="btn btn-sm btn-primary">Mark as read</button>
+                                        </form>
+                                    }
+                                </div>
+                            </div>
+                        </article>
+                    }
+                </div>
+            </div>
+        }
+
+        @if (readNotifications.Any())
+        {
+            <div class="notification-section" style="margin-top: 2rem;">
+                <h2 class="notification-section-title">Read (@readNotifications.Count)</h2>
+                <div class="notification-list">
+                    @foreach (var notification in readNotifications)
+                    {
+                        <article class="notification-card read">
+                            <div class="notification-state" aria-hidden="true"></div>
+                            <div class="notification-content">
+                                <div class="notification-title-row">
+                                    <div>
+                                        <h2>@notification.Title</h2>
+                                        <time datetime="@notification.CreatedAt.ToString("O")">
+                                            @notification.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, h:mm tt")
+                                        </time>
+                                    </div>
+                                    <span class="notification-read-status badge bg-secondary">Read</span>
+                                </div>
+
+                                <p>@notification.Message</p>
+                            </div>
+                        </article>
+                    }
+                </div>
+            </div>
+        }
     }
     else
     {
+        <!-- Show filtered notifications -->
         <div class="notification-list">
-            @foreach (var notification in Model)
+            @foreach (var notification in allNotifications)
             {
                 <article class="notification-card @(!notification.IsRead ? "unread" : "read")">
                     <div class="notification-state" aria-hidden="true"></div>
@@ -50,7 +124,7 @@
                                     @notification.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, h:mm tt")
                                 </time>
                             </div>
-                            <span class="notification-read-status">
+                            <span class="notification-read-status @(notification.IsRead ? "badge bg-secondary" : "badge bg-warning")">
                                 @(notification.IsRead ? "Read" : "Unread")
                             </span>
                         </div>
@@ -58,15 +132,9 @@
                         <p>@notification.Message</p>
 
                         <div class="notification-actions">
-                            @if (notification.ReferenceType == "JOB_APPLICATION" && notification.ReferenceId.HasValue)
-                            {
-                                <a asp-controller="Applications" asp-action="Index"
-                                   class="btn btn-sm btn-outline-primary">View applications</a>
-                            }
-
                             @if (!notification.IsRead)
                             {
-                                <form asp-action="MarkAsRead" method="post">
+                                <form asp-action="MarkAsRead" method="post" style="display: inline;">
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="id" value="@notification.NotificationId" />
                                     <input type="hidden" name="filter" value="@selectedFilter" />

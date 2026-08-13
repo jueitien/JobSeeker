@@ -31,6 +31,23 @@ namespace JobSeeker.Controllers.Employer
             _logger = logger;
         }
 
+        /// <summary>Helper method to create a notification for a vacancy action.</summary>
+        private async Task CreateNotificationAsync(string userId, string title, string message, string referenceType, long referenceId)
+        {
+            var notification = new Notification
+            {
+                UserId = userId,
+                NotificationType = "VACANCY_ACTION",
+                Title = title,
+                Message = message,
+                ReferenceType = referenceType,
+                ReferenceId = referenceId,
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.Notifications.Add(notification);
+        }
+
         // GET: /Vacancies
         public async Task<IActionResult> Index(
             string? searchKeyword,
@@ -182,6 +199,14 @@ namespace JobSeeker.Controllers.Employer
 
             await _context.SaveChangesAsync();
 
+            // Create notification for the new vacancy posting
+            await CreateNotificationAsync(
+                user.Id,
+                "New Vacancy Posted",
+                $"Your vacancy \"{job.JobTitle}\" has been posted and is pending admin approval.",
+                "Job",
+                job.JobId);
+
             // Upload up to 3 vacancy images into the "vacancy-images" folder
             // of the main S3 bucket and record them in job_vacancy_images.
             var imagesToUpload = model.VacancyImages
@@ -269,6 +294,14 @@ namespace JobSeeker.Controllers.Employer
             job.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
+            // Create notification for closing the vacancy
+            await CreateNotificationAsync(
+                user.Id,
+                "Vacancy Closed",
+                $"Your vacancy \"{job.JobTitle}\" has been closed.",
+                "Job",
+                job.JobId);
+
             TempData["SuccessMessage"] = $"\"{job.JobTitle}\" has been closed.";
             return RedirectToAction(nameof(Index));
         }
@@ -298,6 +331,16 @@ namespace JobSeeker.Controllers.Employer
             }
             job.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
+
+            // Create notification for reopening the vacancy
+            await CreateNotificationAsync(
+                user.Id,
+                wasRejected ? "Vacancy Resubmitted" : "Vacancy Reopened",
+                wasRejected
+                    ? $"Your vacancy \"{job.JobTitle}\" has been resubmitted for admin approval."
+                    : $"Your vacancy \"{job.JobTitle}\" has been reopened.",
+                "Job",
+                job.JobId);
 
             TempData["SuccessMessage"] = wasRejected
                 ? $"\"{job.JobTitle}\" has been resubmitted for admin approval."
@@ -340,6 +383,14 @@ namespace JobSeeker.Controllers.Employer
             // Delete the job and associated records (cascade)
             _context.Jobs.Remove(job);
             await _context.SaveChangesAsync();
+
+            // Create notification for deleting the vacancy
+            await CreateNotificationAsync(
+                user.Id,
+                "Vacancy Deleted",
+                $"Your vacancy \"{jobTitle}\" has been deleted.",
+                "Job",
+                id);
 
             TempData["SuccessMessage"] = $"\"{jobTitle}\" has been deleted successfully.";
             return RedirectToAction(nameof(Index));
@@ -517,6 +568,14 @@ namespace JobSeeker.Controllers.Employer
             }
 
             await _context.SaveChangesAsync();
+
+            // Create notification for editing the vacancy
+            await CreateNotificationAsync(
+                user.Id,
+                "Vacancy Updated",
+                $"Your vacancy \"{job.JobTitle}\" has been updated.",
+                "Job",
+                job.JobId);
 
             TempData["SuccessMessage"] = $"\"{job.JobTitle}\" has been updated.";
             return RedirectToAction(nameof(Index));

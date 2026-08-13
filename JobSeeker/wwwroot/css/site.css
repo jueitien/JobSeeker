@@ -763,3 +763,7 @@ img.profile-avatar { object-fit: cover; border: 1px solid var(--portal-border); 
   .notification-title-row { flex-direction: column; gap: 8px; }
   .notification-content { padding: 18px; }
 }
+
+/* Notification section organization */
+.notification-section { margin-bottom: 28px; }
+.notification-section-title { margin: 0 0 14px; font-size: 1.1rem; font-weight: 750; color: var(--portal-text); letter-spacing: -.01em; padding-bottom: 8px; border-bottom: 1px solid var(--portal-border); }
