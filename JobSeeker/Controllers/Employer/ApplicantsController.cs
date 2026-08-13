@@ -190,7 +190,7 @@ namespace JobSeeker.Controllers.Employer
 
             await _context.SaveChangesAsync();
 
-            // Create notification for applicant status change
+            // Create notifications for applicant status change
             var statusDisplayName = status switch
             {
                 "SUBMITTED" => "Submitted",
@@ -204,10 +204,19 @@ namespace JobSeeker.Controllers.Employer
                 _ => status
             };
 
+            // Notification for job seeker
             await CreateNotificationAsync(
                 application.JobSeekerId,
                 "Application Status Updated",
                 $"Your application for \"{application.Job.JobTitle}\" is now {statusDisplayName}.",
+                "Application",
+                application.ApplicationId);
+
+            // Notification for employer
+            await CreateNotificationAsync(
+                user.Id,
+                "Applicant Status Updated",
+                $"Applicant status for \"{application.Job.JobTitle}\" has been updated to {statusDisplayName}.",
                 "Application",
                 application.ApplicationId);
 
