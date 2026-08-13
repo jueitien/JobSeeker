@@ -82,6 +82,7 @@ builder.Services.AddScoped<IAmazonS3>(serviceProvider =>
 });
 
 builder.Services.AddScoped<S3StorageService>();
+builder.Services.AddScoped<NotificationService>();
 
 var app = builder.Build();
 

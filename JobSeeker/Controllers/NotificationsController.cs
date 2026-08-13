@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JobSeeker.Controllers
 {
-    [Authorize(Roles = UserRoles.JobSeeker)]
+    [Authorize(Roles = $"{UserRoles.JobSeeker},{UserRoles.Employer}")]
     public class NotificationsController : Controller
     {
         private readonly ApplicationDbContext _context;

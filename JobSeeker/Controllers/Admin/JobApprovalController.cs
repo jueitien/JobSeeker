@@ -15,15 +15,18 @@ namespace JobSeeker.Controllers.Admin
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly S3StorageService _s3Storage;
+        private readonly NotificationService _notifications;
 
         public JobApprovalController(
             ApplicationDbContext context,
             UserManager<ApplicationUser> userManager,
-            S3StorageService s3Storage)
+            S3StorageService s3Storage,
+            NotificationService notifications)
         {
-            _context = context;
-            _userManager = userManager;
-            _s3Storage = s3Storage;
+            _context       = context;
+            _userManager   = userManager;
+            _s3Storage     = s3Storage;
+            _notifications = notifications;
         }
 
         [HttpGet]
@@ -63,6 +66,15 @@ namespace JobSeeker.Controllers.Admin
             await WriteAuditLog(admin?.Id, "JOB_APPROVED", "Job",
                 $"Approved job: {job.JobTitle} at {job.CompanyName}");
 
+            if (job.EmployerId != null)
+                await _notifications.SendAsync(
+                    userId:           job.EmployerId,
+                    notificationType: "JOB_APPROVED",
+                    title:            "Your job posting has been approved",
+                    message:          $"Your job posting \"{job.JobTitle}\" at {job.CompanyName} has been approved and is now live.",
+                    referenceType:    "Job",
+                    referenceId:      job.JobId);
+
             TempData["SuccessMessage"] = $"\"{job.JobTitle}\" has been approved.";
             return RedirectToAction("Pending");
         }
@@ -85,6 +97,17 @@ namespace JobSeeker.Controllers.Admin
 
             await WriteAuditLog(admin?.Id, "JOB_REJECTED", "Job",
                 $"Rejected job: {job.JobTitle} at {job.CompanyName}. Reason: {reason}");
+
+            if (job.EmployerId != null)
+                await _notifications.SendAsync(
+                    userId:           job.EmployerId,
+                    notificationType: "JOB_REJECTED",
+                    title:            "Your job posting was rejected",
+                    message:          string.IsNullOrWhiteSpace(reason)
+                                        ? $"Your job posting \"{job.JobTitle}\" at {job.CompanyName} has been rejected. Please review and resubmit."
+                                        : $"Your job posting \"{job.JobTitle}\" at {job.CompanyName} has been rejected. Reason: {reason.Trim()}",
+                    referenceType:    "Job",
+                    referenceId:      job.JobId);
 
             TempData["SuccessMessage"] = $"\"{job.JobTitle}\" has been rejected.";
             return RedirectToAction("Pending");

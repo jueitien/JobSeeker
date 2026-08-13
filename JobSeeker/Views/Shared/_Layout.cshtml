@@ -106,6 +106,8 @@
                                         Applicants
                                     </a>
                                 </li>
+
+                                @await Component.InvokeAsync("NotificationNav")
                             }
 
                             @if (User.IsInRole("Career Counsellor"))

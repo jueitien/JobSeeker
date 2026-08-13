@@ -1,6 +1,7 @@
 using JobSeeker.Data;
 using JobSeeker.Models;
 using JobSeeker.Models.ViewModels.Admin;
+using JobSeeker.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -13,13 +14,16 @@ namespace JobSeeker.Controllers.Admin
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly NotificationService _notifications;
 
         public EmployerVerificationController(
             ApplicationDbContext context,
-            UserManager<ApplicationUser> userManager)
+            UserManager<ApplicationUser> userManager,
+            NotificationService notifications)
         {
-            _context = context;
-            _userManager = userManager;
+            _context       = context;
+            _userManager   = userManager;
+            _notifications = notifications;
         }
 
         [HttpGet]
@@ -55,6 +59,13 @@ namespace JobSeeker.Controllers.Admin
             await WriteAuditLog(admin?.Id, "EMPLOYER_APPROVED", "EmployerProfile",
                 $"Approved employer: {employer.CompanyName}");
 
+            await _notifications.SendAsync(
+                userId:           employer.EmployerId,
+                notificationType: "EMPLOYER_VERIFIED",
+                title:            "Your company has been verified",
+                message:          $"Congratulations! Your company \"{employer.CompanyName}\" has been verified and approved. You can now post job vacancies.",
+                referenceType:    "EmployerProfile");
+
             TempData["SuccessMessage"] = $"{employer.CompanyName} has been approved.";
             return RedirectToAction("Pending");
         }
@@ -76,6 +87,15 @@ namespace JobSeeker.Controllers.Admin
 
             await WriteAuditLog(admin?.Id, "EMPLOYER_REJECTED", "EmployerProfile",
                 $"Rejected employer: {employer.CompanyName}. Reason: {remarks}");
+
+            await _notifications.SendAsync(
+                userId:           employer.EmployerId,
+                notificationType: "EMPLOYER_REJECTED",
+                title:            "Your company verification was rejected",
+                message:          string.IsNullOrWhiteSpace(remarks)
+                                    ? $"Your company \"{employer.CompanyName}\" verification has been rejected. Please review your company details and resubmit."
+                                    : $"Your company \"{employer.CompanyName}\" verification has been rejected. Reason: {remarks.Trim()}",
+                referenceType:    "EmployerProfile");
 
             TempData["SuccessMessage"] = $"{employer.CompanyName} has been rejected.";
             return RedirectToAction("Pending");
