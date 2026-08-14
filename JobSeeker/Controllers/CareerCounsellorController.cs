@@ -12,6 +12,7 @@ namespace JobSeeker.Controllers;
 public class CareerCounsellorController(
     ApplicationDbContext db,
     S3StorageService s3Storage,
+    NotificationService notifications,
     ILogger<CareerCounsellorController> logger) : Controller
 {
     [HttpGet]
@@ -69,14 +70,29 @@ public class CareerCounsellorController(
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> SaveResumeFeedback(ResumeFeedback input, string command)
     {
-        var record = await db.ResumeFeedback.FindAsync(input.ResumeFeedbackId);
+        var record = await db.ResumeFeedback
+            .Include(x => x.Resume)
+            .FirstOrDefaultAsync(x => x.ResumeFeedbackId == input.ResumeFeedbackId);
         if (record is null) return NotFound();
+        var shouldNotify = command == "complete" && record.FeedbackStatus != "COMPLETED";
         record.OverallComment = input.OverallComment;
         record.Strengths = input.Strengths;
         record.Weaknesses = input.Weaknesses;
         record.RecommendedChanges = input.RecommendedChanges;
         SetOwnershipAndStatus(record, command);
         await db.SaveChangesAsync();
+
+        if (shouldNotify)
+        {
+            await notifications.SendAsync(
+                record.Resume.JobSeekerId,
+                "COUNSELLOR_RESUME_FEEDBACK",
+                "Your resume feedback is ready",
+                "A career counsellor has completed the review of your resume.",
+                "ResumeFeedback",
+                record.ResumeFeedbackId);
+        }
+
         return command == "complete" ? RedirectToAction(nameof(ResumeReview)) : RedirectToAction(nameof(ResumeFeedbackForm), new { requestId = record.ResumeFeedbackId });
     }
 
@@ -98,12 +114,25 @@ public class CareerCounsellorController(
     {
         var record = await db.CareerRecommendations.FindAsync(input.CareerRecommendationId);
         if (record is null) return NotFound();
+        var shouldNotify = command == "complete" && record.RecommendationStatus != "COMPLETED";
         record.RecommendedJobTitle = input.RecommendedJobTitle;
         record.RecommendedIndustry = input.RecommendedIndustry;
         record.RecommendationReason = input.RecommendationReason;
         record.RequiredImprovements = input.RequiredImprovements;
         SetOwnershipAndStatus(record, command);
         await db.SaveChangesAsync();
+
+        if (shouldNotify)
+        {
+            await notifications.SendAsync(
+                record.JobSeekerId,
+                "COUNSELLOR_CAREER_RECOMMENDATION",
+                "Your career recommendation is ready",
+                "A career counsellor has completed your career recommendation.",
+                "CareerRecommendation",
+                record.CareerRecommendationId);
+        }
+
         return command == "complete" ? RedirectToAction(nameof(CareerReview)) : RedirectToAction(nameof(CareerRecommendations), new { requestId = record.CareerRecommendationId });
     }
 
@@ -125,11 +154,24 @@ public class CareerCounsellorController(
     {
         var record = await db.SkillRecommendations.FindAsync(input.SkillRecommendationId);
         if (record is null) return NotFound();
+        var shouldNotify = command == "complete" && record.RecommendationStatus != "COMPLETED";
         record.RecommendedSkill = input.RecommendedSkill;
         record.PriorityLevel = input.PriorityLevel;
         record.RecommendationReason = input.RecommendationReason;
         SetOwnershipAndStatus(record, command);
         await db.SaveChangesAsync();
+
+        if (shouldNotify)
+        {
+            await notifications.SendAsync(
+                record.JobSeekerId,
+                "COUNSELLOR_SKILL_RECOMMENDATION",
+                "Your skill recommendation is ready",
+                "A career counsellor has completed your skill recommendation.",
+                "SkillRecommendation",
+                record.SkillRecommendationId);
+        }
+
         return command == "complete" ? RedirectToAction(nameof(SkillReview)) : RedirectToAction(nameof(SkillRecommendations), new { requestId = record.SkillRecommendationId });
     }
 
@@ -151,12 +193,25 @@ public class CareerCounsellorController(
     {
         var record = await db.CertificationRecommendations.FindAsync(input.CertificationRecommendationId);
         if (record is null) return NotFound();
+        var shouldNotify = command == "complete" && record.RecommendationStatus != "COMPLETED";
         record.CertificationName = input.CertificationName;
         record.IssuingOrganization = input.IssuingOrganization;
         record.PriorityLevel = input.PriorityLevel;
         record.RecommendationReason = input.RecommendationReason;
         SetOwnershipAndStatus(record, command);
         await db.SaveChangesAsync();
+
+        if (shouldNotify)
+        {
+            await notifications.SendAsync(
+                record.JobSeekerId,
+                "COUNSELLOR_CERTIFICATION_RECOMMENDATION",
+                "Your certification recommendation is ready",
+                "A career counsellor has completed your certification recommendation.",
+                "CertificationRecommendation",
+                record.CertificationRecommendationId);
+        }
+
         return command == "complete" ? RedirectToAction(nameof(CertificationReview)) : RedirectToAction(nameof(CertificationRecommendations), new { requestId = record.CertificationRecommendationId });
     }
 
