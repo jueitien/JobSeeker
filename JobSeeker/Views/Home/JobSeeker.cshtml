@@ -10,10 +10,6 @@
             <h1>Find your next job</h1>
             <p>Browse all available vacancies and compare how well they match your profile.</p>
         </div>
-        <form asp-controller="Home" asp-action="GenerateTestJobs" method="post">
-            @Html.AntiForgeryToken()
-            <button type="submit" class="btn btn-outline-primary">Generate 5 test jobs</button>
-        </form>
     </div>
 
     @if (TempData["SuccessMessage"] is string successMessage)
@@ -103,7 +99,7 @@
     {
         <div class="portal-card empty-job-list">
             <h3>No jobs found</h3>
-            <p>Try clearing some filters, or generate the 5 sample jobs to test the job matching system.</p>
+            <p>Try adjusting or clearing your filters to view more available opportunities.</p>
         </div>
     }
     else
@@ -184,10 +180,6 @@
                                     @if (job.ApplicationDeadline.HasValue)
                                     {
                                         <span>Apply by @job.ApplicationDeadline.Value.ToString("dd MMM yyyy")</span>
-                                    }
-                                    @if (job.IsTestData)
-                                    {
-                                        <span class="test-data-tag">Test job</span>
                                     }
                                 </div>
 
