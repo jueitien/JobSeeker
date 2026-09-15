@@ -17,17 +17,20 @@ namespace JobSeeker.Controllers.Employer
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly S3StorageService _s3Storage;
+        private readonly ServerlessNotificationClient _serverlessNotifications;
         private readonly ILogger<VacanciesController> _logger;
 
         public VacanciesController(
             ApplicationDbContext context,
             UserManager<ApplicationUser> userManager,
             S3StorageService s3Storage,
+            ServerlessNotificationClient serverlessNotifications,
             ILogger<VacanciesController> logger)
         {
             _context = context;
             _userManager = userManager;
             _s3Storage = s3Storage;
+            _serverlessNotifications = serverlessNotifications;
             _logger = logger;
         }
 
@@ -239,6 +242,31 @@ namespace JobSeeker.Controllers.Employer
             }
 
             await _context.SaveChangesAsync();
+
+            // Task #2 serverless administrator alert.
+            // The vacancy is already stored in RDS with ApprovalStatus=PENDING.
+            // ASP.NET then calls API Gateway; the ingress Lambda queues the event
+            // in SQS; the processor Lambda publishes it to the SNS admin topic.
+            // Serverless delivery is best-effort and never rolls back the vacancy.
+            await _serverlessNotifications.PublishAsync(
+                new ServerlessNotificationRequest
+                {
+                    UserId = user.Id,
+                    NotificationType = "VACANCY_PENDING_APPROVAL",
+                    Title = "New job vacancy pending approval",
+                    Message =
+                        $"A new job vacancy requires administrator review.\n\n" +
+                        $"Job ID: {job.JobId}\n" +
+                        $"Company: {job.CompanyName}\n" +
+                        $"Position: {job.JobTitle}\n" +
+                        $"Location: {job.Location ?? "Not specified"}\n" +
+                        $"Employment type: {job.EmploymentType}\n" +
+                        $"Approval status: {job.ApprovalStatus}\n\n" +
+                        "Please sign in to the JobSeeker Administrator portal and review the pending vacancy.",
+                    ReferenceType = "JOB",
+                    ReferenceId = job.JobId,
+                    CreatedAtUtc = now
+                });
 
             TempData["SuccessMessage"] = imageUploadFailed
                 ? "Job vacancy submitted successfully. One or more vacancy images could not be uploaded."

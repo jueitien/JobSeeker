@@ -3,6 +3,12 @@ using JobSeeker.Models;
 
 namespace JobSeeker.Services
 {
+    /// <summary>
+    /// Persists the original Task #1 in-app notification in RDS.
+    /// Task #2 external administrator alerts are intentionally triggered only
+    /// from the employer vacancy workflow, so normal user notifications are
+    /// never broadcast to the administrator SNS topic.
+    /// </summary>
     public class NotificationService
     {
         private readonly ApplicationDbContext _context;
@@ -12,7 +18,6 @@ namespace JobSeeker.Services
             _context = context;
         }
 
-        /// <summary>Sends a notification to a specific user.</summary>
         public async Task SendAsync(
             string userId,
             string notificationType,
@@ -23,14 +28,14 @@ namespace JobSeeker.Services
         {
             _context.Notifications.Add(new Notification
             {
-                UserId           = userId,
+                UserId = userId,
                 NotificationType = notificationType,
-                Title            = title,
-                Message          = message,
-                ReferenceType    = referenceType,
-                ReferenceId      = referenceId,
-                IsRead           = false,
-                CreatedAt        = DateTime.UtcNow
+                Title = title,
+                Message = message,
+                ReferenceType = referenceType,
+                ReferenceId = referenceId,
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow
             });
 
             await _context.SaveChangesAsync();

@@ -1,3 +1,5 @@
 <Solution>
   <Project Path="JobSeeker/JobSeeker.csproj" />
+  <Project Path="Serverless/JobSeeker.NotificationIngressLambda/JobSeeker.NotificationIngressLambda.csproj" />
+  <Project Path="Serverless/JobSeeker.NotificationProcessorLambda/JobSeeker.NotificationProcessorLambda.csproj" />
 </Solution>
