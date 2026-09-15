@@ -19,6 +19,11 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
 });
 
+builder.Services.AddHttpClient<ServerlessNotificationClient>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(5);
+});
+
 builder.Services
     .AddIdentity<ApplicationUser, IdentityRole>(options =>
     {
