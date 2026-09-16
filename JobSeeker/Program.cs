@@ -1,12 +1,22 @@
 using Amazon;
 using Amazon.S3;
+using Amazon.XRay.Recorder.Core;
+using Amazon.XRay.Recorder.Handlers.AwsSdk;
+using Amazon.XRay.Recorder.Handlers.System.Net;
+
 using JobSeeker.Services;
 using JobSeeker.Data;
 using JobSeeker.Models;
+
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
+AWSXRayRecorder.InitializeInstance(builder.Configuration);
+
+AWSSDKHandler.RegisterXRayForAllServices();
+
 var connectionString =
     builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException(
@@ -19,10 +29,14 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
 });
 
-builder.Services.AddHttpClient<ServerlessNotificationClient>(client =>
-{
-    client.Timeout = TimeSpan.FromSeconds(5);
-});
+builder.Services
+    .AddHttpClient<ServerlessNotificationClient>(client =>
+    {
+        client.Timeout = TimeSpan.FromSeconds(5);
+    })
+    .ConfigurePrimaryHttpMessageHandler(() =>
+        new HttpClientXRayTracingHandler(
+            new HttpClientHandler()));
 
 builder.Services
     .AddIdentity<ApplicationUser, IdentityRole>(options =>
@@ -97,6 +111,8 @@ builder.Services.AddHttpClient<ServerlessNotificationClient>(client =>
 builder.Services.AddScoped<NotificationService>();
 
 var app = builder.Build();
+
+app.UseXRay("JobSeeker");
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
